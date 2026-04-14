@@ -250,6 +250,10 @@ body{background:var(--g1);color:var(--text);font-family:var(--font-b);font-weigh
 .particle{position:fixed;pointer-events:none;z-index:201;width:8px;height:8px;border-radius:50%;animation:burst 1s ease-out forwards}
 
 </style>
+<!-- Firebase SDK en el HEAD — carga sincrónica garantizada -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -388,11 +392,6 @@ body{background:var(--g1);color:var(--text);font-family:var(--font-b);font-weigh
   <div class="notif-timer" id="notif-timer">⏱ 15min</div>
 </div>
 <div id="toast"></div>
-
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <!-- Firebase config + auth + security inline -->
 <script>
