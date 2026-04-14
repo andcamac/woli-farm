@@ -743,25 +743,10 @@ const Security = (() => {
   /* ── PROTEGER PROPIEDADES CRÍTICAS ── */
   // Usa los nombres reales de state.js: coins, health
   function protectStateObject(s) {
-    ['coins', 'health', 'totalCyclesCompleted'].forEach(key => {
-      let _v = s[key];
-      Object.defineProperty(s, key, {
-        get() { return _v; },
-        set(newVal) {
-          const stack = new Error().stack || '';
-          const ok = stack.includes('economy.js') || stack.includes('farm.js') ||
-                     stack.includes('state.js')   || stack.includes('clock.js') ||
-                     stack.includes('security.js');
-          if (!ok) {
-            _flag(90, `direct_set:${key}=${newVal}`);
-            console.warn(`🚫 Woli Farm: State.${key} no se puede modificar directamente.`);
-            return;
-          }
-          _v = newVal;
-        },
-        configurable: true, enumerable: true
-      });
-    });
+    // En modo inline (todo en un archivo) el stack trace no contiene
+    // nombres de archivo separados, así que esta protección se omite.
+    // La seguridad la garantizan las Firestore Rules server-side.
+    return s;
   }
 
   /* ── SANITIZAR ESTADO AL CARGAR ── */
