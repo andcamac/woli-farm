@@ -230,9 +230,13 @@ const db   = firebase.firestore();
 // ── AUTH STATE ──
 auth.onAuthStateChanged(async (user) => {
   if (user) {
+    // Usuario logueado → preparar y redirigir al juego
     await ensureUserDoc(user);
-    const data = await loadUserData(user.uid);
-    showWelcome(user, data);
+    // Pequeña pausa para que el usuario vea el mensaje de bienvenida
+    showMsg('¡Bienvenido! Entrando al juego...', 'success');
+    setTimeout(() => {
+      window.location.replace('index.html');
+    }, 1000);
   } else {
     showForms();
   }
