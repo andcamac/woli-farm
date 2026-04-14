@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Woli Farm — Cultiva, Cosecha, Gana</title>
+<meta name="description" content="Cultiva cáñamo en 7 días reales. Gana WOLI tokens. Woli CBD Costa Rica.">
+<meta name="theme-color" content="#0a1f10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/scene.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/shop.css">
+<link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header id="header">
+  <div class="header-left">
+    <div class="logo">WOLI <span>FARM</span></div>
+    <div class="tagline">CULTIVA · COSECHA · GANA TOKENS</div>
+  </div>
+  <div class="header-right">
+    <!-- Badge del usuario inyectado por main.js -->
+    <div id="user-badge-slot"></div>
+    <div class="wallet">
+      <span class="wallet-icon">🪙</span>
+      <span class="wallet-val" id="wallet-display">0</span>
+      <span class="wallet-label">WOLI</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── SCENE ── -->
+<div id="scene">
+  <div id="sky">
+    <div id="moon"></div>
+    <div id="sun"></div>
+  </div>
+  <div id="ground">
+    <div id="plant-wrap">
+      <svg id="plant-svg" viewBox="0 0 200 280" fill="none" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div id="pot-wrap">
+      <div id="pot-soil"></div>
+      <div id="pot"></div>
+    </div>
+    <div id="soil-bar">
+      <div id="soil-fill"></div>
+    </div>
+    <div class="woli-mark">WOLI FARM · COSTA RICA · DEMO v0.2</div>
+  </div>
+</div>
+
+<!-- ── CLOCK STRIP ── -->
+<div id="clock-strip">
+  <div id="clock-time">
+    <span id="clock-h">00</span>:<span id="clock-m">00</span>
+  </div>
+  <div id="day-bar">
+    <div id="day-fill"></div>
+    <div id="day-marker"></div>
+  </div>
+  <div id="day-label">DÍA <span id="day-num">0</span> / 7</div>
+</div>
+
+<!-- ── TASK ALERTS ── -->
+<div id="task-alerts"></div>
+
+<!-- ── STATUS CARDS ── -->
+<div id="status-row">
+  <div class="scard">
+    <div class="scard-icon">💧</div>
+    <div class="scard-val" id="s-water">0/3</div>
+    <div class="scard-lbl">Riegos</div>
+  </div>
+  <div class="scard">
+    <div class="scard-icon">🌿</div>
+    <div class="scard-val" id="s-fert">0/1</div>
+    <div class="scard-lbl">Fertiliz.</div>
+  </div>
+  <div class="scard">
+    <div class="scard-icon">❤️</div>
+    <div class="scard-val" id="s-health">100%</div>
+    <div class="scard-lbl">Salud</div>
+  </div>
+  <div class="scard">
+    <div class="scard-icon">⭐</div>
+    <div class="scard-val" id="s-streak">0</div>
+    <div class="scard-lbl">Racha</div>
+  </div>
+</div>
+
+<!-- ── PROGRESS BAR ── -->
+<div id="progress-wrap">
+  <div class="prog-label">
+    <span>Crecimiento — Día <span id="p-day">0</span>/7</span>
+    <span id="prog-pct">0%</span>
+  </div>
+  <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  <div id="stage-badge"><div class="dot"></div><span id="stage-text">Sin semilla</span></div>
+</div>
+
+<!-- ── ACTION BUTTONS ── -->
+<div id="action-row">
+  <button class="abtn abtn-water" id="btn-water" onclick="Farm.water()">
+    <span class="abtn-icon">💧</span>
+    <span class="abtn-label">Regar</span>
+    <span class="abtn-sub" id="inv-water">x0</span>
+  </button>
+  <button class="abtn abtn-fert" id="btn-fert" onclick="Farm.fertilize()">
+    <span class="abtn-icon">🌿</span>
+    <span class="abtn-label">Fertilizar</span>
+    <span class="abtn-sub" id="inv-fert">x0</span>
+  </button>
+  <button class="abtn abtn-shop" onclick="UI.openShop()">
+    <span class="abtn-icon">🛒</span>
+    <span class="abtn-label">Tienda</span>
+    <span class="abtn-sub">WOLI</span>
+  </button>
+  <button class="abtn abtn-reset" onclick="Farm.confirmReset()">
+    <span class="abtn-icon">🔄</span>
+    <span class="abtn-label">Reset</span>
+    <span class="abtn-sub"></span>
+  </button>
+</div>
+
+<!-- ── EVENT LOG ── -->
+<div id="log-wrap">
+  <div class="log-header">
+    <span>📋 Registro de actividad</span>
+    <span id="log-tokens" class="log-tokens"></span>
+  </div>
+  <div id="log"></div>
+</div>
+
+<!-- ── SHOP MODAL ── -->
+<div id="shop-overlay" onclick="UI.closeShop(event)">
+  <div id="shop-modal">
+    <div class="shop-header">
+      <div class="shop-title">🛒 Tienda Woli Farm</div>
+      <div class="shop-balance">🪙 <span id="shop-balance">0</span> WOLI</div>
+      <button class="shop-close" onclick="UI.closeShopBtn()">×</button>
+    </div>
+    <div class="shop-note">Los suministros se consumen cada ciclo. Mantén inventario para no perder días.</div>
+    <div class="shop-grid" id="shop-grid"></div>
+    <div class="shop-section-title">💼 Historial de Economía</div>
+    <div id="econ-summary"></div>
+    <div class="shop-section-title">🔗 Web3 Preview</div>
+    <div class="web3-preview">
+      <div class="web3-item">
+        <div class="web3-icon">🪙</div>
+        <div>
+          <div class="web3-name">WOLI Token</div>
+          <div class="web3-desc">Cada moneda ganada aquí será convertible 1:1 a WOLI token en la blockchain de lanzamiento. Tus puntos son tu posición pre-mint.</div>
+        </div>
+      </div>
+      <div class="web3-item">
+        <div class="web3-icon">🌱</div>
+        <div>
+          <div class="web3-name">NFT Harvest</div>
+          <div class="web3-desc">Cada cosecha exitosa generará un NFT único con los atributos de tu planta: salud, racha, días perfectos. Rareza basada en tu desempeño.</div>
+        </div>
+      </div>
+      <div class="web3-item">
+        <div class="web3-icon">🏦</div>
+        <div>
+          <div class="web3-name">Tokenomics (Preview)</div>
+          <div class="web3-desc">Supply máximo: 10M WOLI. 40% play-to-earn. 20% liquidez DEX. 20% equipo (vesting 2 años). 20% ecosistema y partnerships.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── HARVEST MODAL ── -->
+<div id="harvest-overlay">
+  <div id="harvest-modal">
+    <div class="harvest-emoji" id="h-emoji">🌸</div>
+    <div class="harvest-title">¡Cosecha Exitosa!</div>
+    <div class="harvest-score">
+      <div class="hscore-row"><span>Días perfectos</span><span id="h-perfect">0/7</span></div>
+      <div class="hscore-row"><span>Salud final</span><span id="h-health">100%</span></div>
+      <div class="hscore-row"><span>Racha máxima</span><span id="h-streak">0</span></div>
+      <div class="hscore-row accent"><span>🪙 WOLI ganados</span><span id="h-tokens">0</span></div>
+    </div>
+    <div class="harvest-rarity" id="h-rarity"></div>
+    <div class="harvest-nft-hint">Este ciclo generaría un NFT con rareza <strong id="h-nft-rarity">—</strong> en la blockchain.</div>
+    <div class="harvest-actions">
+      <button class="hbtn hbtn-new" onclick="Farm.newCycle()">🌱 Nueva Semilla</button>
+      <button class="hbtn hbtn-shop" onclick="UI.openShopFromHarvest()">🛒 Tienda</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── NOTIFICATION POPUP ── -->
+<div id="notif" class="notif-hidden">
+  <div class="notif-icon" id="notif-icon">💧</div>
+  <div class="notif-body">
+    <div class="notif-title" id="notif-title">¡Hora de regar!</div>
+    <div class="notif-sub" id="notif-sub">Tu planta necesita agua ahora</div>
+  </div>
+  <div class="notif-timer" id="notif-timer">⏱ 15min</div>
+</div>
+
+<!-- ── TOAST ── -->
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════
+     FIREBASE SDK  (antes que todo lo del juego)
+     ══════════════════════════════════════════ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<!-- Config Firebase + Auth + Security -->
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/security.js"></script>
+
+<!-- ══════════════════════════════════════════
+     Scripts del juego (orden original)
+     ══════════════════════════════════════════ -->
+<script src="js/config.js"></script>
+<script src="js/state.js"></script>
+<script src="js/clock.js"></script>
+<script src="js/plant.js"></script>
+<script src="js/sky.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/economy.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/farm.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>

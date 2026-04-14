@@ -1,0 +1,27 @@
+/* ═══════════════════════════════════
+   BASE — Variables, Reset, Header
+   Woli Farm · Web3 Demo
+═══════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g1:#0a1f10;--g2:#1a4a2e;--g3:#2d7a4f;--g4:#4caf78;--g5:#8fd4a8;
+  --gold:#c8a84b;--gold2:#f0d080;--cream:#f5f0e8;
+  --soil:#3d2a14;--soil2:#5a3d1e;
+  --text:#e8f0e9;--muted:#6a8a72;--danger:#e05050;--warn:#d4a020;
+  --font-d:'Playfair Display',serif;
+  --font-b:'DM Sans',sans-serif;
+  --font-m:'DM Mono',monospace;
+  --max:600px;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:var(--g1);color:var(--text);font-family:var(--font-b);font-weight:300;display:flex;flex-direction:column;align-items:center;min-height:100vh}
+
+/* Header */
+#header{width:100%;max-width:var(--max);padding:1rem 1.25rem .75rem;display:flex;align-items:center;justify-content:space-between}
+.header-left .logo{font-family:var(--font-d);font-size:1.3rem;font-weight:900;color:var(--cream)}
+.header-left .logo span{color:var(--g4)}
+.tagline{font-family:var(--font-m);font-size:.6rem;color:var(--muted);letter-spacing:.1em}
+.wallet{display:flex;align-items:center;gap:.4rem;background:rgba(200,168,75,.1);border:1px solid rgba(200,168,75,.3);border-radius:100px;padding:.35rem .85rem}
+.wallet-icon{font-size:1rem}
+.wallet-val{font-family:var(--font-d);font-size:1.1rem;font-weight:700;color:var(--gold2)}
+.wallet-label{font-family:var(--font-m);font-size:.6rem;color:var(--gold);letter-spacing:.08em}

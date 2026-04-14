@@ -1,0 +1,65 @@
+/* ═══════════════════════════════════
+   SHOP & HARVEST MODALS
+   Woli Farm · Web3 Demo
+═══════════════════════════════════ */
+
+/* ── Shop overlay ── */
+#shop-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .3s}
+#shop-overlay.show{opacity:1;pointer-events:all}
+#shop-modal{background:#0d1f10;border:1px solid rgba(76,175,120,.2);border-radius:16px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;transform:scale(.95);transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+#shop-overlay.show #shop-modal{transform:scale(1)}
+.shop-header{display:flex;align-items:center;gap:.75rem;padding:1.25rem 1.25rem .75rem;border-bottom:1px solid rgba(255,255,255,.06)}
+.shop-title{font-family:var(--font-d);font-size:1.2rem;font-weight:700;color:var(--cream);flex:1}
+.shop-balance{font-family:var(--font-m);font-size:.85rem;color:var(--gold2);background:rgba(200,168,75,.1);padding:.3rem .75rem;border-radius:100px;border:1px solid rgba(200,168,75,.2)}
+.shop-close{background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;padding:.2rem .5rem;border-radius:6px;transition:color .2s}
+.shop-close:hover{color:var(--cream)}
+.shop-note{font-size:.75rem;color:var(--muted);padding:.5rem 1.25rem;font-style:italic}
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;padding:.5rem 1.25rem 1rem}
+.shop-item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:.9rem;position:relative;transition:border-color .2s}
+.shop-item:hover{border-color:rgba(76,175,120,.3)}
+.shop-item-disabled{opacity:.45}
+.shop-badge{position:absolute;top:.5rem;right:.5rem;background:var(--gold);color:var(--g1);font-family:var(--font-m);font-size:.52rem;font-weight:500;padding:.15rem .5rem;border-radius:100px;letter-spacing:.06em}
+.shop-item-name{font-family:var(--font-d);font-size:.95rem;font-weight:700;color:var(--cream);margin-bottom:.3rem}
+.shop-item-desc{font-size:.72rem;color:var(--muted);margin-bottom:.7rem;line-height:1.4}
+.shop-item-footer{display:flex;justify-content:space-between;align-items:center}
+.shop-price{font-family:var(--font-m);font-size:.8rem;color:var(--gold)}
+.shop-buy-btn{background:rgba(76,175,120,.15);border:1px solid rgba(76,175,120,.35);color:var(--g4);font-family:var(--font-m);font-size:.7rem;padding:.3rem .8rem;border-radius:8px;cursor:pointer;transition:all .2s}
+.shop-buy-btn:hover:not(:disabled){background:rgba(76,175,120,.3);border-color:var(--g4)}
+.shop-buy-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* Economy summary */
+.shop-section-title{font-family:var(--font-m);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.75rem 1.25rem .4rem;border-top:1px solid rgba(255,255,255,.06);margin-top:.5rem}
+.econ-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;padding:0 1.25rem .75rem}
+.econ-item{background:rgba(255,255,255,.03);border-radius:8px;padding:.6rem;text-align:center}
+.econ-val{font-family:var(--font-d);font-size:1.1rem;font-weight:700}
+.econ-val.positive{color:var(--g4)}
+.econ-val.negative{color:var(--danger)}
+.econ-val.warning{color:var(--warn)}
+.econ-lbl{font-family:var(--font-m);font-size:.55rem;color:var(--muted);letter-spacing:.05em;margin-top:.15rem}
+.econ-note{font-size:.72rem;color:var(--muted);padding:.5rem 1.25rem .75rem;font-style:italic;line-height:1.5}
+
+/* Web3 preview */
+.web3-preview{padding:.5rem 1.25rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+.web3-item{display:flex;gap:.75rem;align-items:flex-start;background:rgba(255,255,255,.03);border:1px solid rgba(200,168,75,.1);border-radius:10px;padding:.85rem}
+.web3-icon{font-size:1.5rem;flex-shrink:0}
+.web3-name{font-family:var(--font-d);font-size:.9rem;font-weight:700;color:var(--gold2);margin-bottom:.25rem}
+.web3-desc{font-size:.72rem;color:var(--muted);line-height:1.5}
+
+/* ── Harvest modal ── */
+#harvest-overlay{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;padding:1.5rem}
+#harvest-overlay.show{display:flex}
+#harvest-modal{background:#0d1f10;border:1px solid rgba(200,168,75,.3);border-radius:16px;max-width:400px;width:100%;padding:2rem;text-align:center}
+.harvest-emoji{font-size:3.5rem;margin-bottom:.75rem;animation:popIn .6s cubic-bezier(.34,1.56,.64,1)}
+.harvest-title{font-family:var(--font-d);font-size:2rem;font-weight:900;color:var(--gold2);line-height:1;margin-bottom:1.25rem}
+.harvest-score{background:rgba(255,255,255,.03);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.hscore-row{display:flex;justify-content:space-between;font-family:var(--font-m);font-size:.78rem;color:var(--muted);padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.hscore-row:last-child{border:none}
+.hscore-row.accent{color:var(--gold2);font-size:.85rem;font-weight:500}
+.harvest-rarity{font-size:1.4rem;font-weight:700;margin:.75rem 0 .25rem}
+.harvest-nft-hint{font-size:.72rem;color:var(--muted);font-style:italic;margin-bottom:1.25rem;line-height:1.5}
+.harvest-actions{display:flex;gap:.75rem}
+.hbtn{flex:1;padding:.85rem;border-radius:12px;font-family:var(--font-m);font-size:.8rem;cursor:pointer;transition:all .2s;letter-spacing:.06em}
+.hbtn-new{background:rgba(45,122,79,.25);border:1px solid rgba(76,175,120,.4);color:var(--g5)}
+.hbtn-new:hover{background:rgba(45,122,79,.45);color:var(--cream)}
+.hbtn-shop{background:rgba(200,168,75,.12);border:1px solid rgba(200,168,75,.35);color:var(--gold)}
+.hbtn-shop:hover{background:rgba(200,168,75,.22)}

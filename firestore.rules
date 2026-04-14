@@ -1,0 +1,138 @@
+// ══════════════════════════════════════════════════════════════
+//  firestore.rules  —  Woli Farm Server-Side Security Rules
+//
+//  Pega este contenido en:
+//  Firebase Console → Firestore → Rules → Editar
+//
+//  Estas reglas son la última línea de defensa:
+//  incluso si alguien bypassea el JS del cliente,
+//  Firestore RECHAZA escrituras inválidas.
+// ══════════════════════════════════════════════════════════════
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── HELPERS ────────────────────────────────────────────────
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Valida que un campo sea número dentro de un rango
+    function inRange(val, min, max) {
+      return val is number && val >= min && val <= max;
+    }
+
+    // Verifica que el wallet no haya saltado más de 1000 WOLI
+    // de una sola escritura (imposible en juego legítimo)
+    function walletDeltaOk() {
+      let oldWallet = resource.data.wallet;
+      let newWallet = request.resource.data.wallet;
+      return (newWallet - oldWallet) <= 1000 && (newWallet - oldWallet) >= -10000;
+    }
+
+    // El wallet nuevo está dentro del rango máximo absoluto
+    function walletInBounds() {
+      return inRange(request.resource.data.wallet, -100, 10000);
+    }
+
+    // El día del ciclo es válido (0-7)
+    function dayIsValid() {
+      let gs = request.resource.data.gameState;
+      return gs == null || (gs.day is number && gs.day >= 0 && gs.day <= 7);
+    }
+
+    // La salud está en rango (0-100)
+    function healthIsValid() {
+      let gs = request.resource.data.gameState;
+      return gs == null || (gs.health is number && gs.health >= 0 && gs.health <= 100);
+    }
+
+    // El inventario de suministros es razonable
+    function inventoryIsValid() {
+      let gs = request.resource.data.gameState;
+      return gs == null || (
+        inRange(gs.invWater, 0, 50) &&
+        inRange(gs.invFert,  0, 50)
+      );
+    }
+
+    // Riegos/fertilizaciones del día dentro del límite diario
+    function dailyActionsValid() {
+      let gs = request.resource.data.gameState;
+      return gs == null || (
+        inRange(gs.waterToday, 0, 3) &&
+        inRange(gs.fertToday,  0, 1)
+      );
+    }
+
+    // ── COLECCIÓN: users ───────────────────────────────────────
+    match /users/{userId} {
+
+      // Lectura: solo el propio usuario
+      allow read: if isOwner(userId);
+
+      // Creación: el usuario puede crear su propio doc
+      // con wallet inicial máximo de 200 (100 bienvenida + algo de margen)
+      allow create: if isOwner(userId)
+        && request.resource.data.wallet is number
+        && request.resource.data.wallet <= 200
+        && request.resource.data.wallet >= 0;
+
+      // Actualización: el usuario puede actualizar su propio doc
+      // SOLO si todos los campos pasan validación
+      allow update: if isOwner(userId)
+        && walletInBounds()
+        && walletDeltaOk()
+        && dayIsValid()
+        && healthIsValid()
+        && inventoryIsValid()
+        && dailyActionsValid()
+        // No puede cambiar su propio uid ni email
+        && request.resource.data.email == resource.data.email;
+
+      // Borrado: no permitido desde el cliente
+      allow delete: if false;
+    }
+
+    // ── COLECCIÓN: security_logs ───────────────────────────────
+    // Solo escritura, nunca lectura desde el cliente
+    match /security_logs/{logId} {
+      allow create: if isAuthenticated()
+        // Solo puede reportar su propio uid
+        && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if false; // Admin solo via Admin SDK
+    }
+
+    // ── COLECCIÓN: _time_sync ──────────────────────────────────
+    // Para sincronización de tiempo del anti-cheat
+    match /_time_sync/{docId} {
+      allow read, write: if isAuthenticated();
+      allow delete:      if isAuthenticated();
+    }
+
+    // ── LEADERBOARD (futuro) ───────────────────────────────────
+    match /leaderboard/{entry} {
+      // Lectura pública
+      allow read: if true;
+      // Solo el propio usuario puede crear/actualizar su entrada
+      // y solo si wallet y score son razonables
+      allow create, update: if isAuthenticated()
+        && request.resource.data.uid == request.auth.uid
+        && inRange(request.resource.data.wallet, 0, 10000)
+        && inRange(request.resource.data.bestHarvest, 0, 1000);
+      allow delete: if false;
+    }
+
+    // ── BLOQUEO DEFAULT ────────────────────────────────────────
+    // Todo lo demás está bloqueado por defecto
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

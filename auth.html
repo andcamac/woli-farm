@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Woli Farm — Inicia Sesión</title>
+  <meta name="theme-color" content="#0a1f10">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDK v10 (modular via CDN compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    /* ── RESET & BASE ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-deep:    #0a1f10;
+      --green-dark:    #0f2d18;
+      --green-mid:     #1a4a28;
+      --green-accent:  #2d7a4a;
+      --green-bright:  #4db87a;
+      --green-glow:    #6ee0a0;
+      --gold:          #d4a843;
+      --gold-light:    #f0c96a;
+      --cream:         #f5f0e8;
+      --white:         #ffffff;
+      --red:           #e05454;
+      --font-display:  'Playfair Display', Georgia, serif;
+      --font-body:     'DM Sans', sans-serif;
+      --font-mono:     'DM Mono', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-body);
+      background: var(--green-deep);
+      color: var(--cream);
+      overflow-x: hidden;
+    }
+
+    /* ── ANIMATED BACKGROUND ── */
+    .bg-scene {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .bg-sky {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, #1a4a28 0%, #0a1f10 60%);
+    }
+
+    .bg-stars {
+      position: absolute;
+      inset: 0;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: var(--green-glow);
+      border-radius: 50%;
+      opacity: 0;
+      animation: twinkle var(--d, 3s) var(--delay, 0s) ease-in-out infinite alternate;
+    }
+
+    @keyframes twinkle {
+      0%   { opacity: 0; transform: scale(0.8); }
+      100% { opacity: var(--max-op, 0.7); transform: scale(1.2); }
+    }
+
+    .bg-ground {
+      position: absolute;
+      bottom: 0;
+      left: 0; right: 0;
+      height: 30%;
+      background: linear-gradient(to top, #071510 0%, #0d2419 40%, transparent 100%);
+    }
+
+    /* Floating particles */
+    .particle {
+      position: absolute;
+      font-size: 1.2rem;
+      opacity: 0;
+      animation: floatUp var(--dur, 8s) var(--del, 0s) ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes floatUp {
+      0%   { opacity: 0; transform: translateY(0) rotate(0deg); }
+      20%  { opacity: 0.6; }
+      80%  { opacity: 0.3; }
+      100% { opacity: 0; transform: translateY(-120px) rotate(20deg); }
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .auth-container {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    /* ── LOGO SECTION ── */
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 2rem;
+      animation: fadeDown 0.8s ease both;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo-plant {
+      font-size: 3.5rem;
+      display: block;
+      filter: drop-shadow(0 0 20px var(--green-bright));
+      animation: plantPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes plantPulse {
+      0%, 100% { filter: drop-shadow(0 0 15px var(--green-bright)); }
+      50%       { filter: drop-shadow(0 0 30px var(--green-glow)); }
+    }
+
+    .logo-title {
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      color: var(--white);
+      line-height: 1;
+      margin-top: 0.5rem;
+    }
+
+    .logo-title span {
+      color: var(--green-bright);
+    }
+
+    .logo-tagline {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      color: var(--green-bright);
+      opacity: 0.8;
+      margin-top: 0.5rem;
+      text-transform: uppercase;
+    }
+
+    /* ── CARD ── */
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(15, 45, 24, 0.85);
+      border: 1px solid rgba(77, 184, 122, 0.25);
+      border-radius: 20px;
+      padding: 2rem;
+      backdrop-filter: blur(12px);
+      box-shadow:
+        0 0 0 1px rgba(77, 184, 122, 0.05),
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      animation: fadeUp 0.8s 0.2s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── TABS ── */
+    .auth-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1.8rem;
+      background: rgba(10, 31, 16, 0.6);
+      border-radius: 10px;
+      padding: 4px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 0.6rem;
+      border: none;
+      background: transparent;
+      color: rgba(245, 240, 232, 0.5);
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      border-radius: 7px;
+      transition: all 0.25s ease;
+    }
+
+    .auth-tab.active {
+      background: var(--green-accent);
+      color: var(--white);
+      box-shadow: 0 2px 8px rgba(45, 122, 74, 0.5);
+    }
+
+    /* ── GOOGLE BUTTON ── */
+    .btn-google {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1.5rem;
+      background: var(--white);
+      color: #1a1a1a;
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+
+    .btn-google:hover {
+      background: #f0f0f0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+    }
+
+    .btn-google:active { transform: translateY(0); }
+
+    .google-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      color: rgba(245, 240, 232, 0.3);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(77, 184, 122, 0.15);
+    }
+
+    /* ── FORM ── */
+    .form-group {
+      margin-bottom: 1.1rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: rgba(245, 240, 232, 0.6);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      background: rgba(10, 31, 16, 0.7);
+      border: 1px solid rgba(77, 184, 122, 0.2);
+      border-radius: 10px;
+      color: var(--cream);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .form-input::placeholder { color: rgba(245, 240, 232, 0.25); }
+
+    .form-input:focus {
+      border-color: var(--green-bright);
+      background: rgba(10, 31, 16, 0.9);
+      box-shadow: 0 0 0 3px rgba(77, 184, 122, 0.12);
+    }
+
+    /* ── SUBMIT BTN ── */
+    .btn-submit {
+      width: 100%;
+      padding: 0.9rem;
+      background: linear-gradient(135deg, var(--green-accent), var(--green-bright));
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      margin-top: 0.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-submit::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1));
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(77, 184, 122, 0.4);
+    }
+
+    .btn-submit:hover::after { opacity: 1; }
+    .btn-submit:active { transform: translateY(0); }
+
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── ERROR / SUCCESS MESSAGES ── */
+    .auth-message {
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .auth-message.error {
+      background: rgba(224, 84, 84, 0.15);
+      border: 1px solid rgba(224, 84, 84, 0.35);
+      color: #ff8080;
+      display: block;
+    }
+
+    .auth-message.success {
+      background: rgba(77, 184, 122, 0.15);
+      border: 1px solid rgba(77, 184, 122, 0.35);
+      color: var(--green-glow);
+      display: block;
+    }
+
+    /* ── PASSWORD RESET LINK ── */
+    .forgot-link {
+      display: block;
+      text-align: right;
+      font-size: 0.75rem;
+      color: var(--green-bright);
+      opacity: 0.8;
+      cursor: pointer;
+      margin-top: -0.5rem;
+      margin-bottom: 1rem;
+      text-decoration: none;
+    }
+    .forgot-link:hover { opacity: 1; text-decoration: underline; }
+
+    /* ── LOADING SPINNER ── */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── FOOTER NOTE ── */
+    .auth-footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.72rem;
+      color: rgba(245, 240, 232, 0.3);
+      letter-spacing: 0.05em;
+      animation: fadeUp 0.8s 0.4s ease both;
+    }
+
+    .auth-footer a {
+      color: var(--green-bright);
+      text-decoration: none;
+      opacity: 0.8;
+    }
+    .auth-footer a:hover { opacity: 1; }
+
+    /* ── USER WELCOME (post login) ── */
+    .welcome-state {
+      display: none;
+      text-align: center;
+    }
+
+    .welcome-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 2px solid var(--green-bright);
+      margin: 0 auto 1rem;
+      object-fit: cover;
+      box-shadow: 0 0 20px rgba(77, 184, 122, 0.3);
+    }
+
+    .welcome-name {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 0.3rem;
+    }
+
+    .welcome-email {
+      font-size: 0.8rem;
+      color: rgba(245, 240, 232, 0.5);
+      margin-bottom: 0.5rem;
+    }
+
+    .welcome-woli {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(212, 168, 67, 0.15);
+      border: 1px solid rgba(212, 168, 67, 0.3);
+      color: var(--gold-light);
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-play {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+      color: var(--green-deep);
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      margin-bottom: 0.75rem;
+    }
+
+    .btn-play:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(212, 168, 67, 0.4);
+    }
+
+    .btn-signout {
+      width: 100%;
+      padding: 0.7rem;
+      background: transparent;
+      color: rgba(245, 240, 232, 0.4);
+      border: 1px solid rgba(245, 240, 232, 0.12);
+      border-radius: 10px;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-signout:hover {
+      color: var(--red);
+      border-color: rgba(224, 84, 84, 0.3);
+    }
+
+    /* ── EXTRA FIELDS (signup only) ── */
+    .field-username { display: none; }
+    .tab-signup .field-username { display: block; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 480px) {
+      .auth-card { padding: 1.5rem; }
+      .logo-title { font-size: 2.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ANIMATED BACKGROUND -->
+<div class="bg-scene">
+  <div class="bg-sky"></div>
+  <div class="bg-stars" id="stars-container"></div>
+  <div class="bg-ground"></div>
+</div>
+
+<!-- FLOATING PARTICLES -->
+<div id="particles"></div>
+
+<!-- MAIN AUTH -->
+<div class="auth-container">
+
+  <!-- LOGO -->
+  <div class="auth-logo">
+    <span class="logo-plant">🌿</span>
+    <div class="logo-title">WOLI <span>FARM</span></div>
+    <div class="logo-tagline">Cultiva · Cosecha · Gana Tokens</div>
+  </div>
+
+  <!-- CARD -->
+  <div class="auth-card" id="auth-card">
+
+    <!-- MESSAGE -->
+    <div class="auth-message" id="auth-msg"></div>
+
+    <!-- ── LOGGED IN STATE ── -->
+    <div class="welcome-state" id="welcome-state">
+      <img class="welcome-avatar" id="welcome-avatar" src="" alt="Avatar">
+      <div class="welcome-name" id="welcome-name">Bienvenido</div>
+      <div class="welcome-email" id="welcome-email"></div>
+      <div class="welcome-woli">🪙 <span id="welcome-woli">0</span> WOLI guardados</div>
+      <button class="btn-play" onclick="goToGame()">🌱 Ir a mi Granja</button>
+      <button class="btn-signout" onclick="signOut()">Cerrar sesión</button>
+    </div>
+
+    <!-- ── AUTH FORMS ── -->
+    <div id="auth-forms">
+
+      <!-- TABS -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Iniciar Sesión</button>
+        <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Crear Cuenta</button>
+      </div>
+
+      <!-- GOOGLE -->
+      <button class="btn-google" onclick="loginGoogle()">
+        <svg class="google-icon" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Continuar con Google
+      </button>
+
+      <div class="divider">o con correo</div>
+
+      <!-- LOGIN FORM -->
+      <div id="form-login">
+        <div class="form-group">
+          <label class="form-label">Correo electrónico</label>
+          <input class="form-input" id="login-email" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contraseña</label>
+          <input class="form-input" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"
+                 onkeydown="if(event.key==='Enter')submitLogin()">
+        </div>
+        <a class="forgot-link" onclick="resetPassword()">¿Olvidaste tu contraseña?</a>
+        <button class="btn-submit" id="btn-login" onclick="submitLogin()">Iniciar Sesión</button>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div id="form-signup" style="display:none">
+        <div class="form-group field-username" id="field-username" style="display:block">
+          <label class="form-label">Nombre de usuario</label>
+          <input class="form-input" id="signup-name" type="text" placeholder="Agricultor Woli" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Correo electrónico</label>
+          <input class="form-input" id="signup-email" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contraseña</label>
+          <input class="form-input" id="signup-pass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"
+                 onkeydown="if(event.key==='Enter')submitSignup()">
+        </div>
+        <button class="btn-submit" id="btn-signup" onclick="submitSignup()">Crear Cuenta</button>
+      </div>
+
+    </div><!-- /auth-forms -->
+
+  </div><!-- /auth-card -->
+
+  <div class="auth-footer">
+    WOLI FARM · COSTA RICA · DEMO v0.2<br>
+    <a href="index.html">Jugar sin cuenta →</a>
+  </div>
+
+</div>
+
+<!-- Firebase Config + Auth Logic -->
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+
+<script>
+  /* ── BACKGROUND DECORATIONS ── */
+  const starsEl = document.getElementById('stars-container');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left   = Math.random() * 100 + '%';
+    s.style.top    = Math.random() * 70 + '%';
+    s.style.setProperty('--d',      (2 + Math.random() * 4) + 's');
+    s.style.setProperty('--delay',  (Math.random() * 5) + 's');
+    s.style.setProperty('--max-op', (0.3 + Math.random() * 0.6).toFixed(2));
+    starsEl.appendChild(s);
+  }
+
+  const emojis  = ['🌿','🌱','🍃','💚','✨','🪙'];
+  const partEl  = document.getElementById('particles');
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.className   = 'particle';
+    p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    p.style.left  = Math.random() * 100 + '%';
+    p.style.bottom = (Math.random() * 30) + '%';
+    p.style.setProperty('--dur',  (6 + Math.random() * 8) + 's');
+    p.style.setProperty('--del',  (Math.random() * 10) + 's');
+    partEl.appendChild(p);
+  }
+
+  /* ── TAB SWITCH ── */
+  function switchTab(tab) {
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+    document.getElementById('form-login').style.display  = tab === 'login'  ? 'block' : 'none';
+    document.getElementById('form-signup').style.display = tab === 'signup' ? 'block' : 'none';
+    clearMsg();
+  }
+
+  /* ── SHOW MESSAGE ── */
+  function showMsg(text, type = 'error') {
+    const el = document.getElementById('auth-msg');
+    el.textContent  = text;
+    el.className    = 'auth-message ' + type;
+  }
+
+  function clearMsg() {
+    const el = document.getElementById('auth-msg');
+    el.className = 'auth-message';
+    el.textContent = '';
+  }
+
+  function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (loading) {
+      btn.disabled   = true;
+      btn.innerHTML  = '<span class="spinner"></span> Cargando...';
+    } else {
+      btn.disabled   = false;
+      btn.innerHTML  = btnId === 'btn-login' ? 'Iniciar Sesión' : 'Crear Cuenta';
+    }
+  }
+
+  /* ── GO TO GAME ── */
+  function goToGame() { window.location.href = 'index.html'; }
+</script>
+</body>
+</html>
