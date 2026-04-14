@@ -8,11 +8,248 @@
 <meta name="theme-color" content="#0a1f10">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/scene.css">
-<link rel="stylesheet" href="css/ui.css">
-<link rel="stylesheet" href="css/shop.css">
-<link rel="stylesheet" href="css/animations.css">
+<style>
+
+/* ═══════════════════════════════════
+   BASE — Variables, Reset, Header
+   Woli Farm · Web3 Demo
+═══════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g1:#0a1f10;--g2:#1a4a2e;--g3:#2d7a4f;--g4:#4caf78;--g5:#8fd4a8;
+  --gold:#c8a84b;--gold2:#f0d080;--cream:#f5f0e8;
+  --soil:#3d2a14;--soil2:#5a3d1e;
+  --text:#e8f0e9;--muted:#6a8a72;--danger:#e05050;--warn:#d4a020;
+  --font-d:'Playfair Display',serif;
+  --font-b:'DM Sans',sans-serif;
+  --font-m:'DM Mono',monospace;
+  --max:600px;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:var(--g1);color:var(--text);font-family:var(--font-b);font-weight:300;display:flex;flex-direction:column;align-items:center;min-height:100vh}
+
+/* Header */
+#header{width:100%;max-width:var(--max);padding:1rem 1.25rem .75rem;display:flex;align-items:center;justify-content:space-between}
+.header-left .logo{font-family:var(--font-d);font-size:1.3rem;font-weight:900;color:var(--cream)}
+.header-left .logo span{color:var(--g4)}
+.tagline{font-family:var(--font-m);font-size:.6rem;color:var(--muted);letter-spacing:.1em}
+.wallet{display:flex;align-items:center;gap:.4rem;background:rgba(200,168,75,.1);border:1px solid rgba(200,168,75,.3);border-radius:100px;padding:.35rem .85rem}
+.wallet-icon{font-size:1rem}
+.wallet-val{font-family:var(--font-d);font-size:1.1rem;font-weight:700;color:var(--gold2)}
+.wallet-label{font-family:var(--font-m);font-size:.6rem;color:var(--gold);letter-spacing:.08em}
+
+/* ═══════════════════════════════════
+   SCENE — Sky, Ground, Pot, Plant
+   Woli Farm · Web3 Demo
+═══════════════════════════════════ */
+#scene{width:100%;max-width:var(--max);position:relative;user-select:none}
+#sky{width:100%;height:280px;background:#050c12;position:relative;overflow:hidden;transition:background 4s ease}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) var(--delay,0s) ease-in-out infinite}
+#sun{position:absolute;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle,#ffe066 40%,#ffb830 100%);box-shadow:0 0 40px 20px rgba(255,200,50,.2);left:50%;transform:translateX(-50%);bottom:-80px;transition:bottom 3s ease,opacity 3s ease;opacity:0}
+#moon{position:absolute;width:38px;height:38px;border-radius:50%;background:#e8e0c8;box-shadow:inset -8px -4px 0 #b8b090,0 0 20px 4px rgba(232,224,200,.12);right:55px;top:28px;opacity:1;transition:opacity 3s ease}
+.cloud{position:absolute;background:rgba(255,255,255,.06);border-radius:50px;animation:drift var(--spd,40s) linear infinite;opacity:0;transition:opacity 2s}
+.cloud::before,.cloud::after{content:'';position:absolute;background:rgba(255,255,255,.05);border-radius:50%}
+.cloud::before{width:60%;height:140%;top:-30%;left:20%}
+.cloud::after{width:40%;height:120%;top:-20%;right:10%}
+
+#ground{width:100%;position:relative;background:linear-gradient(to bottom,var(--soil) 0%,var(--soil2) 60%,#2a1a08 100%);height:150px;overflow:visible}
+#ground::before{content:'';position:absolute;top:0;left:0;right:0;height:16px;background:radial-gradient(ellipse 80% 100% at 50% 0%,rgba(76,175,120,.12),transparent)}
+.grass{position:absolute;bottom:100%;width:3px;border-radius:3px 3px 0 0;transform-origin:bottom center;animation:sway var(--sw,3s) var(--sd,0s) ease-in-out infinite}
+
+/* Soil moisture bar */
+#soil-bar{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:88px;height:5px;background:rgba(0,0,0,.3);border-radius:3px;overflow:hidden}
+#soil-fill{height:100%;background:linear-gradient(to right,#4a8abe,#7ef);border-radius:3px;width:0%;transition:width .8s ease}
+
+#pot-wrap{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:110px;display:flex;flex-direction:column;align-items:center}
+#pot{width:86px;height:70px;background:linear-gradient(160deg,#8B4513 0%,#6B3410 50%,#4a2008 100%);clip-path:polygon(8% 0%,92% 0%,82% 100%,18% 100%);position:relative;box-shadow:inset -6px 0 16px rgba(0,0,0,.4)}
+#pot::before{content:'';position:absolute;top:0;left:0;right:0;height:13px;background:#a0521a;border-radius:3px 3px 0 0}
+#pot-soil{width:86px;height:16px;background:linear-gradient(to bottom,var(--soil2),var(--soil));border-radius:3px 3px 0 0}
+#plant-wrap{position:absolute;bottom:86px;left:50%;transform:translateX(-50%);width:200px;height:280px;pointer-events:none}
+#plant-svg{width:200px;height:280px}
+.drop{position:absolute;width:7px;height:11px;background:radial-gradient(ellipse at 30% 30%,#7ef,#2af);border-radius:50% 50% 50% 50%/40% 40% 60% 60%;opacity:0;animation:fall .8s ease-in forwards}
+.fert-particle{position:absolute;width:6px;height:6px;border-radius:50%;background:#4caf78;opacity:0;animation:fertPop .9s ease-out forwards}
+.woli-mark{position:absolute;bottom:6px;right:8px;font-family:var(--font-m);font-size:.5rem;color:rgba(76,175,120,.2);letter-spacing:.08em;pointer-events:none}
+
+/* ═══════════════════════════════════
+   UI — Panel, Buttons, Clock, Log
+   Woli Farm · Web3 Demo
+═══════════════════════════════════ */
+
+/* Clock strip */
+#clock-strip{width:100%;max-width:var(--max);display:flex;align-items:center;gap:.75rem;padding:.6rem 1.25rem;background:rgba(0,0,0,.3);border-top:1px solid rgba(76,175,120,.1)}
+#clock-time{font-family:var(--font-m);font-size:1.4rem;font-weight:500;color:var(--cream);letter-spacing:.05em;min-width:56px}
+#day-bar{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;position:relative;overflow:visible}
+#day-fill{height:100%;background:linear-gradient(to right,var(--g3),var(--g4));border-radius:3px;transition:width 1s linear}
+#day-marker{position:absolute;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:var(--g4);border:2px solid var(--g1);transition:left 1s linear}
+#day-label{font-family:var(--font-m);font-size:.7rem;color:var(--muted);white-space:nowrap;letter-spacing:.06em}
+
+/* Task alerts */
+#task-alerts{width:100%;max-width:var(--max);display:flex;flex-direction:column;gap:.3rem;padding:0 1.25rem}
+.task-alert{display:flex;justify-content:space-between;align-items:center;padding:.5rem 1rem;border-radius:8px;font-family:var(--font-m);font-size:.75rem;font-weight:500;animation:alertSlide .3s ease}
+.task-water{background:rgba(30,120,200,.2);border:1px solid rgba(60,160,240,.4);color:#7df}
+.task-fert{background:rgba(60,160,60,.2);border:1px solid rgba(80,200,80,.4);color:#8fd4a8}
+.task-timer{font-size:.7rem;opacity:.8}
+
+/* Status cards */
+#status-row{width:100%;max-width:var(--max);display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;padding:.75rem 1.25rem}
+.scard{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:.6rem .75rem;text-align:center}
+.scard-icon{font-size:1.2rem;line-height:1;margin-bottom:.15rem}
+.scard-val{font-family:var(--font-d);font-size:1rem;font-weight:700;color:var(--cream)}
+.scard-lbl{font-family:var(--font-m);font-size:.55rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-top:.1rem}
+
+/* Progress */
+#progress-wrap{width:100%;max-width:var(--max);padding:.5rem 1.25rem .75rem}
+.prog-label{display:flex;justify-content:space-between;font-family:var(--font-m);font-size:.62rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:.35rem}
+.prog-track{height:7px;background:rgba(255,255,255,.07);border-radius:100px;overflow:hidden;margin-bottom:.5rem}
+.prog-fill{height:100%;border-radius:100px;background:linear-gradient(to right,var(--g2),var(--g4));transition:width 1s ease}
+#stage-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .85rem;border-radius:100px;font-family:var(--font-m);font-size:.65rem;background:rgba(76,175,120,.1);border:1px solid rgba(76,175,120,.2);color:var(--g4)}
+#stage-badge .dot{width:5px;height:5px;border-radius:50%;background:var(--g4);animation:pulse 2s infinite}
+
+/* Action buttons */
+#action-row{width:100%;max-width:var(--max);display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;padding:.5rem 1.25rem}
+.abtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;padding:.7rem .5rem;border-radius:12px;border:1px solid;cursor:pointer;transition:all .2s;background:transparent}
+.abtn:active{transform:scale(.96)}
+.abtn:disabled{opacity:.4;cursor:not-allowed}
+.abtn-icon{font-size:1.4rem;line-height:1}
+.abtn-label{font-family:var(--font-m);font-size:.62rem;font-weight:500;letter-spacing:.05em;text-align:center;line-height:1.2}
+.abtn-sub{font-family:var(--font-m);font-size:.55rem;opacity:.6}
+
+.abtn-water{border-color:rgba(60,140,220,.35);color:#7ef}
+.abtn-water:not(:disabled):hover{background:rgba(30,100,180,.2);border-color:rgba(60,140,220,.6)}
+.abtn-plant{border-color:rgba(76,175,120,.5);color:var(--g5);animation:plantPulse 2s ease-in-out infinite}
+.abtn-plant:hover{background:rgba(45,122,79,.25)}
+.abtn-fert{border-color:rgba(76,175,120,.3);color:var(--g4)}
+.abtn-fert:not(:disabled):hover{background:rgba(45,122,79,.2);border-color:rgba(76,175,120,.5)}
+.abtn-shop{border-color:rgba(200,168,75,.3);color:var(--gold)}
+.abtn-shop:hover{background:rgba(200,168,75,.12);border-color:rgba(200,168,75,.5)}
+.abtn-reset{border-color:rgba(200,80,80,.25);color:#f88}
+.abtn-reset:hover{background:rgba(200,80,80,.1)}
+.abtn-done{border-color:rgba(76,175,120,.2) !important;color:var(--g4) !important;opacity:.6}
+.abtn-urgent{border-color:rgba(255,200,50,.7) !important;color:#ffe !important;background:rgba(200,150,0,.2) !important;animation:urgentPulse 1s ease-in-out infinite}
+.pulse-alert{animation:urgentPulse 1s ease-in-out 4 !important}
+
+/* Log */
+#log-wrap{width:100%;max-width:var(--max);padding:.5rem 1.25rem 1.5rem}
+.log-header{display:flex;justify-content:space-between;font-family:var(--font-m);font-size:.62rem;color:var(--muted);letter-spacing:.06em;margin-bottom:.4rem;text-transform:uppercase}
+#log{max-height:100px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--g2) transparent}
+.log-line{padding:.15rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-family:var(--font-m);font-size:.68rem;color:var(--muted)}
+.log-ts{color:var(--g4);margin-right:.4rem}
+.log-good .log-ts,.log-good{color:#8fd4a8}
+.log-warn{color:var(--warn)}
+.log-day{color:var(--gold)}
+.log-harvest{color:var(--gold2);font-weight:500}
+
+/* Notification bar */
+.notif-hidden{display:none}
+.notif-show{
+  display:flex;align-items:center;gap:.75rem;
+  width:100%;max-width:var(--max);
+  padding:.75rem 1.25rem;
+  background:linear-gradient(135deg,rgba(200,150,0,.15),rgba(30,100,180,.15));
+  border-top:2px solid var(--gold);
+  border-bottom:2px solid rgba(60,140,220,.4);
+  animation:notifSlide .3s ease;
+}
+.notif-icon{font-size:1.6rem;flex-shrink:0}
+.notif-body{flex:1}
+.notif-title{font-family:var(--font-d);font-size:1rem;font-weight:700;color:var(--cream)}
+.notif-sub{font-family:var(--font-m);font-size:.65rem;color:var(--muted)}
+.notif-timer{font-family:var(--font-m);font-size:.75rem;color:var(--gold);white-space:nowrap}
+
+/* Toast */
+#toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(16px);background:var(--g2);border:1px solid rgba(76,175,120,.35);border-radius:100px;padding:.5rem 1.4rem;font-family:var(--font-m);font-size:.78rem;color:var(--g5);opacity:0;transition:all .35s;pointer-events:none;white-space:nowrap;z-index:300;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:420px){
+  #action-row{grid-template-columns:repeat(2,1fr)}
+  #status-row{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ═══════════════════════════════════
+   SHOP & HARVEST MODALS
+   Woli Farm · Web3 Demo
+═══════════════════════════════════ */
+
+/* ── Shop overlay ── */
+#shop-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .3s}
+#shop-overlay.show{opacity:1;pointer-events:all}
+#shop-modal{background:#0d1f10;border:1px solid rgba(76,175,120,.2);border-radius:16px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;transform:scale(.95);transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+#shop-overlay.show #shop-modal{transform:scale(1)}
+.shop-header{display:flex;align-items:center;gap:.75rem;padding:1.25rem 1.25rem .75rem;border-bottom:1px solid rgba(255,255,255,.06)}
+.shop-title{font-family:var(--font-d);font-size:1.2rem;font-weight:700;color:var(--cream);flex:1}
+.shop-balance{font-family:var(--font-m);font-size:.85rem;color:var(--gold2);background:rgba(200,168,75,.1);padding:.3rem .75rem;border-radius:100px;border:1px solid rgba(200,168,75,.2)}
+.shop-close{background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;padding:.2rem .5rem;border-radius:6px;transition:color .2s}
+.shop-close:hover{color:var(--cream)}
+.shop-note{font-size:.75rem;color:var(--muted);padding:.5rem 1.25rem;font-style:italic}
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;padding:.5rem 1.25rem 1rem}
+.shop-item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:.9rem;position:relative;transition:border-color .2s}
+.shop-item:hover{border-color:rgba(76,175,120,.3)}
+.shop-item-disabled{opacity:.45}
+.shop-badge{position:absolute;top:.5rem;right:.5rem;background:var(--gold);color:var(--g1);font-family:var(--font-m);font-size:.52rem;font-weight:500;padding:.15rem .5rem;border-radius:100px;letter-spacing:.06em}
+.shop-item-name{font-family:var(--font-d);font-size:.95rem;font-weight:700;color:var(--cream);margin-bottom:.3rem}
+.shop-item-desc{font-size:.72rem;color:var(--muted);margin-bottom:.7rem;line-height:1.4}
+.shop-item-footer{display:flex;justify-content:space-between;align-items:center}
+.shop-price{font-family:var(--font-m);font-size:.8rem;color:var(--gold)}
+.shop-buy-btn{background:rgba(76,175,120,.15);border:1px solid rgba(76,175,120,.35);color:var(--g4);font-family:var(--font-m);font-size:.7rem;padding:.3rem .8rem;border-radius:8px;cursor:pointer;transition:all .2s}
+.shop-buy-btn:hover:not(:disabled){background:rgba(76,175,120,.3);border-color:var(--g4)}
+.shop-buy-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* Economy summary */
+.shop-section-title{font-family:var(--font-m);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.75rem 1.25rem .4rem;border-top:1px solid rgba(255,255,255,.06);margin-top:.5rem}
+.econ-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;padding:0 1.25rem .75rem}
+.econ-item{background:rgba(255,255,255,.03);border-radius:8px;padding:.6rem;text-align:center}
+.econ-val{font-family:var(--font-d);font-size:1.1rem;font-weight:700}
+.econ-val.positive{color:var(--g4)}
+.econ-val.negative{color:var(--danger)}
+.econ-val.warning{color:var(--warn)}
+.econ-lbl{font-family:var(--font-m);font-size:.55rem;color:var(--muted);letter-spacing:.05em;margin-top:.15rem}
+.econ-note{font-size:.72rem;color:var(--muted);padding:.5rem 1.25rem .75rem;font-style:italic;line-height:1.5}
+
+/* Web3 preview */
+.web3-preview{padding:.5rem 1.25rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+.web3-item{display:flex;gap:.75rem;align-items:flex-start;background:rgba(255,255,255,.03);border:1px solid rgba(200,168,75,.1);border-radius:10px;padding:.85rem}
+.web3-icon{font-size:1.5rem;flex-shrink:0}
+.web3-name{font-family:var(--font-d);font-size:.9rem;font-weight:700;color:var(--gold2);margin-bottom:.25rem}
+.web3-desc{font-size:.72rem;color:var(--muted);line-height:1.5}
+
+/* ── Harvest modal ── */
+#harvest-overlay{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;padding:1.5rem}
+#harvest-overlay.show{display:flex}
+#harvest-modal{background:#0d1f10;border:1px solid rgba(200,168,75,.3);border-radius:16px;max-width:400px;width:100%;padding:2rem;text-align:center}
+.harvest-emoji{font-size:3.5rem;margin-bottom:.75rem;animation:popIn .6s cubic-bezier(.34,1.56,.64,1)}
+.harvest-title{font-family:var(--font-d);font-size:2rem;font-weight:900;color:var(--gold2);line-height:1;margin-bottom:1.25rem}
+.harvest-score{background:rgba(255,255,255,.03);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.hscore-row{display:flex;justify-content:space-between;font-family:var(--font-m);font-size:.78rem;color:var(--muted);padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.hscore-row:last-child{border:none}
+.hscore-row.accent{color:var(--gold2);font-size:.85rem;font-weight:500}
+.harvest-rarity{font-size:1.4rem;font-weight:700;margin:.75rem 0 .25rem}
+.harvest-nft-hint{font-size:.72rem;color:var(--muted);font-style:italic;margin-bottom:1.25rem;line-height:1.5}
+.harvest-actions{display:flex;gap:.75rem}
+.hbtn{flex:1;padding:.85rem;border-radius:12px;font-family:var(--font-m);font-size:.8rem;cursor:pointer;transition:all .2s;letter-spacing:.06em}
+.hbtn-new{background:rgba(45,122,79,.25);border:1px solid rgba(76,175,120,.4);color:var(--g5)}
+.hbtn-new:hover{background:rgba(45,122,79,.45);color:var(--cream)}
+.hbtn-shop{background:rgba(200,168,75,.12);border:1px solid rgba(200,168,75,.35);color:var(--gold)}
+.hbtn-shop:hover{background:rgba(200,168,75,.22)}
+
+/* ═══════════════════════════════════
+   ANIMATIONS
+   Woli Farm · Web3 Demo
+═══════════════════════════════════ */
+@keyframes twinkle{0%,100%{opacity:var(--op,.6)}50%{opacity:.08}}
+@keyframes drift{from{transform:translateX(-200px)}to{transform:translateX(calc(100vw + 200px))}}
+@keyframes sway{0%,100%{transform:rotate(var(--lean,2deg))}50%{transform:rotate(calc(var(--lean,2deg)*-1.5))}}
+@keyframes fall{0%{opacity:1;transform:translateY(0) scale(1)}80%{opacity:.8;transform:translateY(var(--dist,80px)) scale(.9)}100%{opacity:0;transform:translateY(calc(var(--dist,80px) + 10px)) scale(.3)}}
+@keyframes fertPop{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--tx,0),var(--ty,-30px)) scale(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes plantPulse{0%,100%{box-shadow:0 0 0 0 rgba(76,175,120,.3)}50%{box-shadow:0 0 0 8px rgba(76,175,120,0)}}
+@keyframes urgentPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,200,50,.4)}50%{box-shadow:0 0 0 10px rgba(255,200,50,0)}}
+@keyframes popIn{from{transform:scale(0)}to{transform:scale(1)}}
+@keyframes burst{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}}
+@keyframes alertSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes notifSlide{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+.particle{position:fixed;pointer-events:none;z-index:201;width:8px;height:8px;border-radius:50%;animation:burst 1s ease-out forwards}
+
+</style>
 </head>
 <body>
 
@@ -23,7 +260,6 @@
     <div class="tagline">CULTIVA · COSECHA · GANA TOKENS</div>
   </div>
   <div class="header-right">
-    <!-- Badge del usuario inyectado por main.js -->
     <div id="user-badge-slot"></div>
     <div class="wallet">
       <span class="wallet-icon">🪙</span>
@@ -47,53 +283,29 @@
       <div id="pot-soil"></div>
       <div id="pot"></div>
     </div>
-    <div id="soil-bar">
-      <div id="soil-fill"></div>
-    </div>
-    <div class="woli-mark">WOLI FARM · COSTA RICA · DEMO v0.2</div>
+    <div id="soil-bar"><div id="soil-fill"></div></div>
+    <div class="woli-mark">WOLI FARM · COSTA RICA · v0.2</div>
   </div>
 </div>
 
 <!-- ── CLOCK STRIP ── -->
 <div id="clock-strip">
-  <div id="clock-time">
-    <span id="clock-h">00</span>:<span id="clock-m">00</span>
-  </div>
-  <div id="day-bar">
-    <div id="day-fill"></div>
-    <div id="day-marker"></div>
-  </div>
+  <div id="clock-time"><span id="clock-h">00</span>:<span id="clock-m">00</span></div>
+  <div id="day-bar"><div id="day-fill"></div><div id="day-marker"></div></div>
   <div id="day-label">DÍA <span id="day-num">0</span> / 7</div>
 </div>
 
-<!-- ── TASK ALERTS ── -->
 <div id="task-alerts"></div>
 
 <!-- ── STATUS CARDS ── -->
 <div id="status-row">
-  <div class="scard">
-    <div class="scard-icon">💧</div>
-    <div class="scard-val" id="s-water">0/3</div>
-    <div class="scard-lbl">Riegos</div>
-  </div>
-  <div class="scard">
-    <div class="scard-icon">🌿</div>
-    <div class="scard-val" id="s-fert">0/1</div>
-    <div class="scard-lbl">Fertiliz.</div>
-  </div>
-  <div class="scard">
-    <div class="scard-icon">❤️</div>
-    <div class="scard-val" id="s-health">100%</div>
-    <div class="scard-lbl">Salud</div>
-  </div>
-  <div class="scard">
-    <div class="scard-icon">⭐</div>
-    <div class="scard-val" id="s-streak">0</div>
-    <div class="scard-lbl">Racha</div>
-  </div>
+  <div class="scard"><div class="scard-icon">💧</div><div class="scard-val" id="s-water">0/3</div><div class="scard-lbl">Riegos</div></div>
+  <div class="scard"><div class="scard-icon">🌿</div><div class="scard-val" id="s-fert">0/1</div><div class="scard-lbl">Fertiliz.</div></div>
+  <div class="scard"><div class="scard-icon">❤️</div><div class="scard-val" id="s-health">100%</div><div class="scard-lbl">Salud</div></div>
+  <div class="scard"><div class="scard-icon">⭐</div><div class="scard-val" id="s-streak">0</div><div class="scard-lbl">Racha</div></div>
 </div>
 
-<!-- ── PROGRESS BAR ── -->
+<!-- ── PROGRESS ── -->
 <div id="progress-wrap">
   <div class="prog-label">
     <span>Crecimiento — Día <span id="p-day">0</span>/7</span>
@@ -106,33 +318,22 @@
 <!-- ── ACTION BUTTONS ── -->
 <div id="action-row">
   <button class="abtn abtn-water" id="btn-water" onclick="Farm.water()">
-    <span class="abtn-icon">💧</span>
-    <span class="abtn-label">Regar</span>
-    <span class="abtn-sub" id="inv-water">x0</span>
+    <span class="abtn-icon">💧</span><span class="abtn-label">Regar</span><span class="abtn-sub" id="inv-water">x0</span>
   </button>
   <button class="abtn abtn-fert" id="btn-fert" onclick="Farm.fertilize()">
-    <span class="abtn-icon">🌿</span>
-    <span class="abtn-label">Fertilizar</span>
-    <span class="abtn-sub" id="inv-fert">x0</span>
+    <span class="abtn-icon">🌿</span><span class="abtn-label">Fertilizar</span><span class="abtn-sub" id="inv-fert">x0</span>
   </button>
   <button class="abtn abtn-shop" onclick="UI.openShop()">
-    <span class="abtn-icon">🛒</span>
-    <span class="abtn-label">Tienda</span>
-    <span class="abtn-sub">WOLI</span>
+    <span class="abtn-icon">🛒</span><span class="abtn-label">Tienda</span><span class="abtn-sub">WOLI</span>
   </button>
   <button class="abtn abtn-reset" onclick="Farm.confirmReset()">
-    <span class="abtn-icon">🔄</span>
-    <span class="abtn-label">Reset</span>
-    <span class="abtn-sub"></span>
+    <span class="abtn-icon">🔄</span><span class="abtn-label">Reset</span><span class="abtn-sub"></span>
   </button>
 </div>
 
-<!-- ── EVENT LOG ── -->
+<!-- ── LOG ── -->
 <div id="log-wrap">
-  <div class="log-header">
-    <span>📋 Registro de actividad</span>
-    <span id="log-tokens" class="log-tokens"></span>
-  </div>
+  <div class="log-header"><span>📋 Registro de actividad</span><span id="log-tokens" class="log-tokens"></span></div>
   <div id="log"></div>
 </div>
 
@@ -150,27 +351,9 @@
     <div id="econ-summary"></div>
     <div class="shop-section-title">🔗 Web3 Preview</div>
     <div class="web3-preview">
-      <div class="web3-item">
-        <div class="web3-icon">🪙</div>
-        <div>
-          <div class="web3-name">WOLI Token</div>
-          <div class="web3-desc">Cada moneda ganada aquí será convertible 1:1 a WOLI token en la blockchain de lanzamiento. Tus puntos son tu posición pre-mint.</div>
-        </div>
-      </div>
-      <div class="web3-item">
-        <div class="web3-icon">🌱</div>
-        <div>
-          <div class="web3-name">NFT Harvest</div>
-          <div class="web3-desc">Cada cosecha exitosa generará un NFT único con los atributos de tu planta: salud, racha, días perfectos. Rareza basada en tu desempeño.</div>
-        </div>
-      </div>
-      <div class="web3-item">
-        <div class="web3-icon">🏦</div>
-        <div>
-          <div class="web3-name">Tokenomics (Preview)</div>
-          <div class="web3-desc">Supply máximo: 10M WOLI. 40% play-to-earn. 20% liquidez DEX. 20% equipo (vesting 2 años). 20% ecosistema y partnerships.</div>
-        </div>
-      </div>
+      <div class="web3-item"><div class="web3-icon">🪙</div><div><div class="web3-name">WOLI Token</div><div class="web3-desc">Cada moneda ganada aquí será convertible 1:1 a WOLI token en la blockchain de lanzamiento.</div></div></div>
+      <div class="web3-item"><div class="web3-icon">🌱</div><div><div class="web3-name">NFT Harvest</div><div class="web3-desc">Cada cosecha exitosa generará un NFT único con rareza basada en tu desempeño.</div></div></div>
+      <div class="web3-item"><div class="web3-icon">🏦</div><div><div class="web3-name">Tokenomics</div><div class="web3-desc">Supply máximo: 10M WOLI. 40% play-to-earn. 20% liquidez DEX. 20% equipo (vesting 2 años).</div></div></div>
     </div>
   </div>
 </div>
@@ -195,7 +378,7 @@
   </div>
 </div>
 
-<!-- ── NOTIFICATION POPUP ── -->
+<!-- ── NOTIF ── -->
 <div id="notif" class="notif-hidden">
   <div class="notif-icon" id="notif-icon">💧</div>
   <div class="notif-body">
@@ -204,37 +387,1984 @@
   </div>
   <div class="notif-timer" id="notif-timer">⏱ 15min</div>
 </div>
-
-<!-- ── TOAST ── -->
 <div id="toast"></div>
 
-<!-- ══════════════════════════════════════════
-     FIREBASE SDK  (antes que todo lo del juego)
-     ══════════════════════════════════════════ -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-<!-- Config Firebase + Auth + Security -->
-<script src="js/firebase-config.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/security.js"></script>
+<!-- Firebase config + auth + security inline -->
+<script>
 
-<!-- ══════════════════════════════════════════
-     Scripts del juego (orden original)
-     ══════════════════════════════════════════ -->
-<script src="js/config.js"></script>
-<script src="js/state.js"></script>
-<script src="js/clock.js"></script>
-<script src="js/plant.js"></script>
-<script src="js/sky.js"></script>
-<script src="js/scene.js"></script>
-<script src="js/economy.js"></script>
-<script src="js/shop.js"></script>
-<script src="js/notifications.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/farm.js"></script>
-<script src="js/main.js"></script>
+/* ═══════════════════════════════════════════
+   FIREBASE CONFIG — Woli Farm
+   Credenciales de tu proyecto Firebase
+═══════════════════════════════════════════ */
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyAMiVlybrhAd9ymLsWK0r96-3PAPzsgf0A",
+  authDomain:        "wolifarm.firebaseapp.com",
+  projectId:         "wolifarm",
+  storageBucket:     "wolifarm.firebasestorage.app",
+  messagingSenderId: "139390791572",
+  appId:             "1:139390791572:web:90d876f6a0429c30816981",
+  measurementId:     "G-JR1345HJEQ"
+};
+
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+
+// Servicios globales usados por auth.js y security.js
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// Persistencia offline
+db.enablePersistence().catch(err => {
+  if (err.code === 'failed-precondition') {
+    console.warn('Firestore: múltiples pestañas abiertas.');
+  } else if (err.code === 'unimplemented') {
+    console.warn('Firestore: navegador sin soporte de persistencia.');
+  }
+});
+
+/* ═══════════════════════════════════════════
+   AUTH — Firebase Authentication & Cloud Save
+   Woli Farm · Web3 Demo
+   Login Google, email/pass, registro, reset
+   Cloud save/load vinculado a state.js real
+═══════════════════════════════════════════ */
+'use strict';
+
+/* ── AUTH STATE LISTENER ── */
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    await ensureUserDoc(user);
+    // Guardar sesión en sessionStorage para el juego
+    sessionStorage.setItem('woli_uid', user.uid);
+    sessionStorage.setItem('woli_user', JSON.stringify({
+      uid:         user.uid,
+      displayName: user.displayName || _extractName(user.email),
+      email:       user.email,
+      photoURL:    user.photoURL || _avatarUrl(user.displayName || user.email)
+    }));
+  } else {
+    sessionStorage.removeItem('woli_uid');
+    sessionStorage.removeItem('woli_user');
+  }
+});
+
+/* ── GOOGLE LOGIN ── */
+async function loginGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  try {
+    await auth.signInWithPopup(provider);
+  } catch (err) {
+    // Si el popup fue bloqueado, usar redirect
+    if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+      await auth.signInWithRedirect(provider);
+    }
+    throw err;
+  }
+}
+
+/* ── EMAIL LOGIN ── */
+async function loginEmail(email, password) {
+  return auth.signInWithEmailAndPassword(email, password);
+}
+
+/* ── EMAIL SIGNUP ── */
+async function signupEmail(email, password, displayName) {
+  const cred = await auth.createUserWithEmailAndPassword(email, password);
+  if (displayName) {
+    await cred.user.updateProfile({ displayName });
+  }
+  return cred;
+}
+
+/* ── PASSWORD RESET ── */
+async function resetPassword(email) {
+  return auth.sendPasswordResetEmail(email);
+}
+
+/* ── SIGN OUT ── */
+async function signOut() {
+  return auth.signOut();
+}
+
+/* ═══════════════════════════════════════════
+   FIRESTORE — Cloud Save / Load
+   Vinculado a las variables reales de state.js:
+   coins, water, fert, seeds, health, etc.
+═══════════════════════════════════════════ */
+
+async function ensureUserDoc(user) {
+  const ref = db.collection('users').doc(user.uid);
+  const doc = await ref.get();
+  if (!doc.exists) {
+    await ref.set({
+      displayName:          user.displayName || _extractName(user.email),
+      email:                user.email,
+      photoURL:             user.photoURL || '',
+      createdAt:            firebase.firestore.FieldValue.serverTimestamp(),
+      // Mapeado a los campos reales de state.js
+      coins:                80,   // Bono de bienvenida (igual que START_COINS)
+      totalCyclesCompleted: 0,
+      gameState:            null
+    });
+  }
+}
+
+/* CloudSave — API pública para usar desde state.js y main.js */
+window.CloudSave = {
+
+  // Guarda el estado completo (s = objeto State real de state.js)
+  async save(s) {
+    const user = auth.currentUser;
+    if (!user || !s) return;
+    try {
+      await db.collection('users').doc(user.uid).update({
+        coins:                s.coins    ?? 0,
+        totalCyclesCompleted: s.totalCyclesCompleted ?? 0,
+        gameState:            s,
+        savedAt:              firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (e) {
+      // Si el doc no existe aún, usar set
+      if (e.code === 'not-found') {
+        await ensureUserDoc(user);
+        await this.save(s);
+      } else {
+        console.warn('CloudSave.save:', e.message);
+      }
+    }
+  },
+
+  // Carga el gameState guardado en Firestore
+  async load() {
+    const user = auth.currentUser;
+    if (!user) return null;
+    try {
+      const doc = await db.collection('users').doc(user.uid).get();
+      if (!doc.exists) return null;
+      return doc.data().gameState || null;
+    } catch (e) {
+      console.warn('CloudSave.load:', e.message);
+      return null;
+    }
+  },
+
+  isLoggedIn()     { return !!auth.currentUser; },
+  getCurrentUser() { return auth.currentUser; }
+};
+
+/* ── HELPERS ── */
+function _extractName(email) {
+  if (!email) return 'Agricultor';
+  return email.split('@')[0]
+    .replace(/[._-]/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function _avatarUrl(name) {
+  const initials = (name || 'W').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=1a4a28&color=6ee0a0&size=64&bold=true`;
+}
+
+function _friendlyError(code) {
+  const map = {
+    'auth/user-not-found':         'No hay cuenta con ese correo.',
+    'auth/wrong-password':         'Contraseña incorrecta.',
+    'auth/invalid-credential':     'Correo o contraseña incorrectos.',
+    'auth/email-already-in-use':   'Ya existe una cuenta con ese correo.',
+    'auth/weak-password':          'La contraseña debe tener al menos 6 caracteres.',
+    'auth/invalid-email':          'El correo ingresado no es válido.',
+    'auth/too-many-requests':      'Demasiados intentos. Esperá unos minutos.',
+    'auth/network-request-failed': 'Sin conexión. Revisá tu internet.',
+    'auth/popup-closed-by-user':   'Cerraste el popup. Intentá de nuevo.',
+  };
+  return map[code] || `Error (${code})`;
+}
+
+/* ═══════════════════════════════════════════
+   SECURITY — Anti-Cheat System
+   Woli Farm · Web3 Demo
+   Adaptado a los campos reales de state.js:
+   coins, water, fert, seeds, health, etc.
+═══════════════════════════════════════════ */
+'use strict';
+
+const Security = (() => {
+
+  const HMAC_SECRET        = 'wf_2024_integrity';
+  const MAX_COINS          = 10000;
+  const MAX_DELTA          = 400;
+  const ACTION_COOLDOWN_MS = 500;
+  const CLOCK_DRIFT_MAX_MS = 30000;
+
+  let _serverTimeOffset = 0;
+  let _lastActionTime   = 0;
+  let _usedTokens       = new Set();
+  let _suspicion        = 0;
+  let _sessionId        = _uid(16);
+  let _initialized      = false;
+
+  /* ── INIT ── */
+  async function init() {
+    if (_initialized) return;
+    _initialized = true;
+
+    // Cargar tokens usados
+    try {
+      const raw = localStorage.getItem('woli_used_tokens');
+      if (raw) _usedTokens = new Set(JSON.parse(raw));
+    } catch (_) {}
+
+    // Sincronizar tiempo con servidor
+    await _syncTime();
+    setInterval(_syncTime, 5 * 60 * 1000);
+
+    console.log('%c🔒 Woli Farm Security activo', 'color:#4caf78;font-weight:bold');
+  }
+
+  /* ── TIEMPO CONFIABLE ── */
+  async function _syncTime() {
+    try {
+      if (!window.db || !window.firebase) return;
+      const ref = db.collection('_time_sync').doc('probe');
+      await ref.set({ t: firebase.firestore.FieldValue.serverTimestamp() });
+      const snap = await ref.get();
+      const serverTs = snap.data().t.toMillis();
+      _serverTimeOffset = serverTs - Date.now();
+      if (Math.abs(_serverTimeOffset) > CLOCK_DRIFT_MAX_MS) {
+        _flag(25, `clock_drift:${_serverTimeOffset}ms`);
+      }
+      await ref.delete().catch(() => {});
+    } catch (_) {}
+  }
+
+  function trustedTime() { return Date.now() + _serverTimeOffset; }
+
+  /* ── TOKEN DE ACCIÓN (replay prevention) ── */
+  function _makeToken(action) {
+    const uid = window.CloudSave?.getCurrentUser()?.uid || 'anon';
+    return btoa(`${action}:${uid}:${trustedTime()}:${_sessionId}:${Math.random()}`).slice(0, 22);
+  }
+
+  function _consumeToken(token) {
+    if (_usedTokens.has(token)) { _flag(50, `replay:${token}`); return false; }
+    _usedTokens.add(token);
+    if (_usedTokens.size > 500) {
+      _usedTokens = new Set(Array.from(_usedTokens).slice(-200));
+    }
+    try { localStorage.setItem('woli_used_tokens', JSON.stringify([..._usedTokens])); } catch (_) {}
+    return true;
+  }
+
+  /* ── VALIDAR ACCIÓN (llama antes de water/fert/buy) ── */
+  function validateAction(type, state) {
+    // Rate limit
+    const now = trustedTime();
+    if (now - _lastActionTime < ACTION_COOLDOWN_MS) {
+      _flag(5, 'rate_limit');
+      return { ok: false, reason: 'Muy rápido, esperá un momento.' };
+    }
+    _lastActionTime = now;
+
+    // Estado válido
+    if (!state || typeof state.coins !== 'number') {
+      _flag(20, 'invalid_state');
+      return { ok: false, reason: 'Estado del juego inválido.' };
+    }
+
+    // Coins en rango
+    if (state.coins > MAX_COINS || state.coins < -500) {
+      _flag(100, `coins_oor:${state.coins}`);
+      return { ok: false, reason: 'Balance fuera de rango.' };
+    }
+
+    // Integridad del estado
+    if (!_verifyHash(state)) {
+      _flag(80, 'state_hash_fail');
+      return { ok: false, reason: 'Estado comprometido.' };
+    }
+
+    const token = _makeToken(type);
+    return { ok: true, token };
+  }
+
+  function consumeToken(token) { return _consumeToken(token); }
+
+  /* ── VALIDAR DELTA DE COINS ── */
+  function validateDelta(delta, ctx) {
+    if (typeof delta !== 'number' || isNaN(delta)) { _flag(30, `bad_delta:${ctx}`); return 0; }
+    if (delta > MAX_DELTA) { _flag(40, `delta_large:${delta}:${ctx}`); return MAX_DELTA; }
+    return delta;
+  }
+
+  /* ── HASH DE INTEGRIDAD (djb2) ── */
+  // Campos críticos mapeados a los nombres reales de state.js
+  function _hashState(s) {
+    const critical = JSON.stringify({
+      coins:    s.coins,
+      water:    s.water,
+      fert:     s.fert,
+      seeds:    s.seeds,
+      health:   s.health,
+      cycleDay: s.cycleDay,
+      dayWaters:s.dayWaters,
+      dayFert:  s.dayFert,
+      perfectDays: s.perfectDays,
+      totalCyclesCompleted: s.totalCyclesCompleted
+    }) + HMAC_SECRET;
+
+    let h = 5381;
+    for (let i = 0; i < critical.length; i++) {
+      h = ((h << 5) + h) ^ critical.charCodeAt(i);
+      h = h >>> 0;
+    }
+    return h.toString(36);
+  }
+
+  function sealState(s) {
+    s._integrity = _hashState(s);
+    s._ts = trustedTime();
+    return s;
+  }
+
+  function _verifyHash(s) {
+    if (!s._integrity) return true; // estado nuevo sin hash aún
+    return s._integrity === _hashState(s);
+  }
+
+  function verifyStateIntegrity(s) { return _verifyHash(s); }
+
+  /* ── PROTEGER PROPIEDADES CRÍTICAS ── */
+  // Usa los nombres reales de state.js: coins, health
+  function protectStateObject(s) {
+    ['coins', 'health', 'totalCyclesCompleted'].forEach(key => {
+      let _v = s[key];
+      Object.defineProperty(s, key, {
+        get() { return _v; },
+        set(newVal) {
+          const stack = new Error().stack || '';
+          const ok = stack.includes('economy.js') || stack.includes('farm.js') ||
+                     stack.includes('state.js')   || stack.includes('clock.js') ||
+                     stack.includes('security.js');
+          if (!ok) {
+            _flag(90, `direct_set:${key}=${newVal}`);
+            console.warn(`🚫 Woli Farm: State.${key} no se puede modificar directamente.`);
+            return;
+          }
+          _v = newVal;
+        },
+        configurable: true, enumerable: true
+      });
+    });
+  }
+
+  /* ── SANITIZAR ESTADO AL CARGAR ── */
+  // Clampea todos los campos de freshState() a rangos válidos
+  function sanitizeLoadedState(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const s = { ...raw };
+
+    const clamp = (v, min, max, def) =>
+      (typeof v === 'number' && !isNaN(v)) ? Math.max(min, Math.min(max, Math.floor(v))) : def;
+
+    s.coins              = clamp(s.coins,              -500,  MAX_COINS, 80);
+    s.water              = clamp(s.water,              0,     99,        0);
+    s.fert               = clamp(s.fert,               0,     99,        0);
+    s.seeds              = clamp(s.seeds,              0,     99,        0);
+    s.health             = clamp(s.health,             0,     100,       100);
+    s.cycleDay           = clamp(s.cycleDay,           0,     7,         0);
+    s.dayWaters          = clamp(s.dayWaters,          0,     3,         0);
+    s.dayFert            = clamp(s.dayFert,            0,     1,         0);
+    s.perfectDays        = clamp(s.perfectDays,        0,     7,         0);
+    s.streakDays         = clamp(s.streakDays,         0,     7,         0);
+    s.maxStreak          = clamp(s.maxStreak,          0,     7,         0);
+    s.totalCyclesCompleted = clamp(s.totalCyclesCompleted, 0, 9999,      0);
+
+    return s;
+  }
+
+  /* ── SISTEMA DE SOSPECHA ── */
+  function _flag(pts, reason) {
+    _suspicion += pts;
+    console.warn(`🚩 Security: ${reason} (+${pts} → total ${_suspicion})`);
+    _report(reason, pts);
+    if (_suspicion >= 200) _blockSession();
+    else if (_suspicion >= 100) _warnUser();
+  }
+
+  async function _report(reason, pts) {
+    try {
+      const user = window.CloudSave?.getCurrentUser();
+      if (!user || !window.db) return;
+      await db.collection('security_logs').add({
+        uid: user.uid, reason, pts,
+        total: _suspicion,
+        session: _sessionId,
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (_) {}
+  }
+
+  function _warnUser() {
+    const t = document.getElementById('toast');
+    if (t) { t.textContent = '⚠️ Actividad inusual detectada.'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3500); }
+  }
+
+  function _blockSession() {
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(10,31,16,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f5f0e8;font-family:DM Sans,sans-serif;text-align:center;padding:2rem';
+    el.innerHTML = `<div style="font-size:3rem;margin-bottom:1rem">🔒</div>
+      <div style="font-family:Playfair Display,serif;font-size:1.6rem;color:#e05050;margin-bottom:.5rem">Sesión Suspendida</div>
+      <div style="opacity:.7;max-width:320px;line-height:1.6;margin-bottom:2rem">Se detectó actividad sospechosa. Tu progreso fue reseteado por seguridad.</div>
+      <button onclick="location.reload()" style="padding:.8rem 2rem;background:#2d7a4f;color:#fff;border:none;border-radius:10px;font-size:1rem;cursor:pointer">Recargar</button>`;
+    document.body.appendChild(el);
+  }
+
+  /* ── HELPERS ── */
+  function _uid(len) {
+    return Array.from({ length: len }, () => 'abcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random() * 36)]).join('');
+  }
+
+  return {
+    init,
+    trustedTime,
+    validateAction,
+    consumeToken,
+    validateDelta,
+    sealState,
+    verifyStateIntegrity,
+    sanitizeLoadedState,
+    protectStateObject
+  };
+
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+  Security.init().catch(e => console.warn('Security init:', e));
+});
+
+</script>
+
+<!-- Game scripts inline -->
+<script>
+
+/* ═══════════════════════════════════════════
+   CONFIG — Game Constants & Economy Design
+   Woli Farm · Web3 Demo
+   ═══════════════════════════════════════════
+   TOKENOMICS RATIONALE:
+   - A perfect 7-day cycle earns ~700 WOLI
+   - Supplies cost ~280 WOLI total to sustain a full cycle
+   - Net profit per perfect cycle: ~420 WOLI
+   - Imperfect play earns less but costs the same → incentivizes engagement
+   - Streak bonuses reward consistent players with up to 2x multiplier
+   - This creates a healthy play-to-earn loop without hyperinflation:
+     casual player earns ~150-250 WOLI/cycle net
+     dedicated player earns ~400-500 WOLI/cycle net
+═══════════════════════════════════════════ */
+
+'use strict';
+
+const CFG = Object.freeze({
+
+  // ── Cycle ──────────────────────────────────
+  CYCLE_DAYS:          7,          // real calendar days per grow cycle
+  MS_PER_GAME_HOUR:    3600000,    // 1 real hour = 1 game hour (true real-time)
+
+  // ── Daily requirements ─────────────────────
+  WATERS_PER_DAY:      3,          // required daily waterings
+  FERTS_PER_DAY:       1,          // required daily fertilizations
+
+  // Window: each task fires at a random minute within a window
+  // Player has TASK_WINDOW_MINS to respond before it's "late"
+  WATER_WINDOWS:       [7, 13, 19], // hours of day water tasks fire (morning, midday, evening)
+  FERT_WINDOW:         [10],        // hour fertilizer task fires
+  TASK_WINDOW_MINS:    90,          // minutes to complete task for full reward
+  TASK_LATE_MINS:      180,         // minutes before task expires entirely
+
+  // ── Economy ────────────────────────────────
+  // Rewards
+  COINS_PER_PERFECT_DAY:   100,    // all tasks done on time
+  COINS_PER_LATE_DAY_MAX:  10,     // max coins if tasks done late
+  COINS_STREAK_BONUS:      20,     // extra coins per streak day (multiplier: streakDays * 20, cap 100)
+  COINS_STREAK_CAP:        100,
+  COINS_HARVEST_BASE:      200,    // bonus for completing full 7-day cycle
+  COINS_HARVEST_HEALTH:    1,      // extra coin per health % point at harvest
+  COINS_HARVEST_PERFECT:   50,     // bonus per perfect day at harvest
+
+  // Costs (shop)
+  PRICE_WATER:       10,   // per unit of water (1 watering = 1 unit)
+  PRICE_FERT:        15,   // per unit of fertilizer
+  PRICE_SEED:        30,   // per seed (needed to start new cycle)
+  PRICE_WATER_PACK:  25,   // 3x water bundle (saves 5 coins)
+  PRICE_FERT_PACK:   25,   // 2x fert bundle (saves 5 coins)
+  PRICE_STARTER_KIT: 60,   // seed + 3 water + 2 fert bundle (saves 10 coins)
+
+  // Starting inventory (demo gift so players can start immediately)
+  START_COINS:       80,
+  START_WATER:       3,
+  START_FERT:        2,
+  START_SEEDS:       1,
+
+  // ── Health ─────────────────────────────────
+  HEALTH_MAX:        100,
+  HEALTH_DECAY_MISSED_WATER: 12,   // per missed watering
+  HEALTH_DECAY_MISSED_FERT:  8,    // per missed fertilization
+  HEALTH_BOOST_WATER:        5,
+  HEALTH_BOOST_FERT:         8,
+  HEALTH_MIN:        10,           // plant never fully dies (demo UX)
+
+  // ── Stages (days → stage) ──────────────────
+  STAGES: [
+    { day: 0, name: 'Sin semilla',    label: 'Planta tu semilla para comenzar' },
+    { day: 1, name: 'Germinando',     label: 'La semilla despierta bajo tierra' },
+    { day: 2, name: 'Brote',          label: 'Primeros cotiledones visibles' },
+    { day: 3, name: 'Plántula',       label: 'Primeras hojas verdaderas' },
+    { day: 4, name: 'Vegetativa',     label: 'Crecimiento rápido en marcha' },
+    { day: 5, name: 'Pre-floración',  label: 'Signos de sexo y pre-flores' },
+    { day: 6, name: 'Floración',      label: 'Capullos formándose' },
+    { day: 7, name: '¡Cosecha!',      label: 'Lista para cosechar 🌸' },
+  ],
+
+  // ── NFT Rarity thresholds (% of max possible score) ──
+  RARITY: [
+    { min: 90, label: '💎 Legendaria', color: '#f0d080' },
+    { min: 75, label: '🔮 Épica',      color: '#c080f0' },
+    { min: 55, label: '💙 Rara',       color: '#60a0f0' },
+    { min: 30, label: '🟢 Común',      color: '#4caf78' },
+    { min: 0,  label: '⚪ Básica',     color: '#888888' },
+  ],
+
+  // ── Web3 tokenomics preview ────────────────
+  TOKENOMICS: {
+    maxSupply:         10_000_000,
+    playToEarn:        0.40,   // 40% = 4,000,000 WOLI for P2E rewards
+    liquidity:         0.20,
+    team:              0.20,   // 2-year vesting
+    ecosystem:         0.20,
+    estimatedConvert:  0.05,   // placeholder USD value per WOLI at launch
+  },
+});
+
+/* ═══════════════════════════════════════════
+   STATE — Game State & Persistence
+   Woli Farm · Web3 Demo
+   v2: Cloud Save + Security integrado
+═══════════════════════════════════════════ */
+
+'use strict';
+
+const STATE_KEY = 'woli_farm_v1';
+
+function freshState() {
+  return {
+    v: 1,
+
+    // Cycle tracking
+    cycleActive:    false,
+    cycleStartTime: null,
+    cycleDay:       0,
+    cycleComplete:  false,
+
+    // Daily progress
+    dayWaters:      0,
+    dayFert:        0,
+    dayPerfect:     false,
+    todayOnTime:    { w: [false,false,false], f: [false] },
+
+    // Across cycle
+    perfectDays:    0,
+    streakDays:     0,
+    maxStreak:      0,
+
+    // Plant
+    health:         100,
+    stageIdx:       0,
+
+    // Inventory
+    seeds:          CFG.START_SEEDS,
+    water:          CFG.START_WATER,
+    fert:           CFG.START_FERT,
+
+    // Wallet
+    coins:          CFG.START_COINS,
+    coinsEarned:    0,
+    coinsSpent:     0,
+
+    // Tasks
+    tasks:          [],
+    lastDayChecked: null,
+
+    // History
+    dayHistory:            [],
+    totalCyclesCompleted:  0,
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (!raw) return freshState();
+    const parsed = JSON.parse(raw);
+    if (!parsed || parsed.v !== 1) return freshState();
+
+    // Verificar integridad anti-cheat
+    if (window.Security && !Security.verifyStateIntegrity(parsed)) {
+      console.warn('⚠️ Estado local comprometido, usando freshState.');
+      Security.addSuspicion && Security.addSuspicion(50, 'localStorage_tampered');
+      return freshState();
+    }
+
+    // Sanitizar rangos
+    const clean = window.Security
+      ? Security.sanitizeLoadedState(parsed)
+      : parsed;
+
+    return clean || freshState();
+  } catch (e) {
+    return freshState();
+  }
+}
+
+function saveState(s) {
+  // Sellar estado antes de guardar
+  if (window.Security) Security.sealState(s);
+
+  // Guardar en localStorage (siempre, funciona offline)
+  try { localStorage.setItem(STATE_KEY, JSON.stringify(s)); } catch(e) {}
+
+  // Guardar en la nube si hay sesión (no bloquea)
+  if (window.CloudSave && CloudSave.isLoggedIn()) {
+    CloudSave.save(s).catch(e => console.warn('Cloud save:', e.message));
+  }
+}
+
+// Carga asíncrona desde la nube (llamada desde main.js)
+async function loadStateCloud() {
+  // 1. Intentar cloud
+  if (window.CloudSave && CloudSave.isLoggedIn()) {
+    try {
+      const cloud = await CloudSave.load();
+      if (cloud) {
+        const clean = window.Security
+          ? Security.sanitizeLoadedState(cloud)
+          : cloud;
+        if (clean && clean.v === 1) {
+          console.log('✅ Progreso cargado desde la nube');
+          return clean;
+        }
+      }
+    } catch (e) {
+      console.warn('Cloud load falló, usando localStorage:', e.message);
+    }
+  }
+
+  // 2. Fallback localStorage
+  return loadState();
+}
+
+/* ═══════════════════════════════════════════
+   CLOCK — Real-Time Engine & Task Scheduling
+   Woli Farm · Web3 Demo
+═══════════════════════════════════════════ */
+
+'use strict';
+
+const Clock = (() => {
+
+  let _state   = null;
+  let _ticker  = null;
+  let _onTick  = null;    // callback(state) called every second
+  let _onDay   = null;    // callback(state, newDay) on day transition
+
+  // ── Get real local time components ────────
+  function now()     { return new Date(); }
+  function hour()    { return now().getHours(); }
+  function minute()  { return now().getMinutes(); }
+  function second()  { return now().getSeconds(); }
+  function dateKey() { const d = now(); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; }
+
+  // ── Compute how many game days have elapsed since cycle start ──
+  function elapsedDays(state) {
+    if (!state.cycleActive || !state.cycleStartTime) return 0;
+    const ms = Date.now() - state.cycleStartTime;
+    return Math.floor(ms / 86400000); // ms per day
+  }
+
+  // ── Generate today's tasks at random minutes within windows ──
+  function generateDayTasks(state) {
+    const dk = dateKey();
+    if (state.lastDayChecked === dk) return; // already generated today
+    state.lastDayChecked = dk;
+    state.dayWaters   = 0;
+    state.dayFert     = 0;
+    state.dayPerfect  = false;
+    state.todayOnTime = { w: [false,false,false], f: [false] };
+
+    const tasks = [];
+
+    // Schedule 3 water tasks at each window hour + random offset (0–30 min)
+    CFG.WATER_WINDOWS.forEach((wh, i) => {
+      const offsetMin = Math.floor(Math.random() * 30);
+      const fireMin   = wh * 60 + offsetMin;         // minutes from midnight
+      tasks.push({
+        id:       `water_${i}`,
+        type:     'water',
+        index:    i,
+        fireMin,                                      // when to show notification
+        deadlineMin: fireMin + CFG.TASK_WINDOW_MINS,  // last minute for on-time
+        expiryMin:   fireMin + CFG.TASK_LATE_MINS,    // after this: missed
+        status:   'pending',   // pending | notified | done_ontime | done_late | missed
+        notified: false,
+      });
+    });
+
+    // Schedule fertilizer task
+    CFG.FERT_WINDOW.forEach((fh, i) => {
+      const offsetMin = Math.floor(Math.random() * 30);
+      const fireMin   = fh * 60 + offsetMin;
+      tasks.push({
+        id:       `fert_${i}`,
+        type:     'fert',
+        index:    i,
+        fireMin,
+        deadlineMin: fireMin + CFG.TASK_WINDOW_MINS,
+        expiryMin:   fireMin + CFG.TASK_LATE_MINS,
+        status:   'pending',
+        notified: false,
+      });
+    });
+
+    state.tasks = tasks;
+  }
+
+  // ── Current minutes from midnight ─────────
+  function minutesNow() {
+    const d = now();
+    return d.getHours() * 60 + d.getMinutes();
+  }
+
+  // ── Tick: called every second ──────────────
+  function tick() {
+    if (!_state || !_state.cycleActive) {
+      if (_onTick) _onTick(_state);
+      return;
+    }
+
+    const mins    = minutesNow();
+    const dayNow  = elapsedDays(_state) + 1; // day 1–7
+
+    // ── Day transition ──
+    if (dayNow !== _state.cycleDay && dayNow <= CFG.CYCLE_DAYS) {
+      const prevDay = _state.cycleDay;
+      _state.cycleDay = dayNow;
+
+      // Score previous day before resetting
+      if (prevDay > 0) {
+        Econ.scorePreviousDay(_state, prevDay);
+      }
+
+      generateDayTasks(_state);
+
+      if (_onDay) _onDay(_state, dayNow);
+    }
+
+    // ── Day 7 complete ──
+    if (dayNow > CFG.CYCLE_DAYS && !_state.cycleComplete) {
+      _state.cycleComplete = true;
+      Econ.scorePreviousDay(_state, 7);
+      if (_onDay) _onDay(_state, 8); // signal harvest
+    }
+
+    // ── Process task notifications & expiry ──
+    _state.tasks.forEach(task => {
+      if (task.status === 'pending' && mins >= task.fireMin && !task.notified) {
+        task.notified = true;
+        task.status   = 'notified';
+        Notifications.fire(task);
+      }
+      if (task.status === 'notified' && mins >= task.expiryMin) {
+        task.status = 'missed';
+        Notifications.dismiss(task.id);
+        _handleMissedTask(task);
+      }
+    });
+
+    saveState(_state);
+    if (_onTick) _onTick(_state);
+  }
+
+  function _handleMissedTask(task) {
+    const penalty = task.type === 'water'
+      ? CFG.HEALTH_DECAY_MISSED_WATER
+      : CFG.HEALTH_DECAY_MISSED_FERT;
+    _state.health = Math.max(CFG.HEALTH_MIN, _state.health - penalty);
+  }
+
+  // ── Public API ─────────────────────────────
+  function start(state, onTick, onDay) {
+    _state  = state;
+    _onTick = onTick;
+    _onDay  = onDay;
+    generateDayTasks(state);
+    if (_ticker) clearInterval(_ticker);
+    _ticker = setInterval(tick, 1000);
+    tick(); // immediate first tick
+  }
+
+  function stop() {
+    clearInterval(_ticker);
+    _ticker = null;
+  }
+
+  function getState()     { return _state; }
+  function setState(s)    { _state = s; }
+  function getDayNow()    { return elapsedDays(_state) + 1; }
+  function getMinutesNow(){ return minutesNow(); }
+  function getHour()      { return hour(); }
+  function getDateKey()   { return dateKey(); }
+
+  // Complete a task (called when player acts)
+  function completeTask(state, type) {
+    const mins     = minutesNow();
+    const pending  = state.tasks.filter(t => t.type === type && (t.status === 'notified' || t.status === 'pending'));
+    if (!pending.length) return 'none';  // no active task for this type
+
+    const task  = pending[0];
+    const onTime = mins <= task.deadlineMin;
+    task.status  = onTime ? 'done_ontime' : 'done_late';
+    if (onTime) {
+      if (type === 'water') state.todayOnTime.w[task.index] = true;
+      else                  state.todayOnTime.f[task.index] = true;
+    }
+    Notifications.dismiss(task.id);
+    return onTime ? 'ontime' : 'late';
+  }
+
+  // Check if there's a currently active (notified) task of this type
+  function hasActiveTask(state, type) {
+    return state.tasks.some(t => t.type === type && t.status === 'notified');
+  }
+
+  // How many minutes left on the active task
+  function taskTimeLeft(state, type) {
+    const t = state.tasks.find(t => t.type === type && t.status === 'notified');
+    if (!t) return null;
+    return t.deadlineMin - minutesNow();
+  }
+
+  return { start, stop, getState, setState, getDayNow, getMinutesNow,
+           getHour, getDateKey, completeTask, hasActiveTask, taskTimeLeft };
+})();
+
+/* ═══════════════════════════════════════════
+   PLANT — SVG Drawing for 8 Growth Stages
+   Woli Farm · Web3 Demo
+═══════════════════════════════════════════ */
+
+'use strict';
+
+function plantColors(h) {
+  if (h > 0.75) return { g: '#4caf78', d: '#2d7a4f', s: '#3a8d5a' };
+  if (h > 0.5)  return { g: '#8fc840', d: '#4a6a10', s: '#5a7a20' };
+  if (h > 0.25) return { g: '#c8a840', d: '#8a6010', s: '#9a7020' };
+  return               { g: '#c86040', d: '#6a2010', s: '#8a3020' };
+}
+
+function _lp(x,y,sz,f,d,a) {
+  const r=a*Math.PI/180, dx=Math.sin(r)*sz*.8, dy=-Math.cos(r)*sz*.5;
+  return `<path d="M${x},${y} C${x-dx*.5+dy*.3},${y+dy*.5-dx*.3} ${x-dx+dy},${y+dy-dx} ${x-dx*1.5},${y+dy*.5}" fill="${f}" opacity=".75"/>
+          <path d="M${x},${y} C${x+dx*.5+dy*.3},${y+dy*.5+dx*.3} ${x+dx+dy},${y+dy+dx} ${x+dx*1.5},${y+dy*.5}" fill="${d}" opacity=".75"/>`;
+}
+
+function _cl(x,y,sz,f,d,rot) {
+  const s=sz;
+  return `<g transform="rotate(${rot},${x},${y})">
+    <path d="M${x},${y} C${x-s*.1},${y-s*.3} ${x-s*.5},${y-s*.4} ${x-s*.6},${y-s*.2} C${x-s*.7},${y} ${x-s*.4},${y+s*.1} ${x},${y}Z" fill="${f}" opacity=".8"/>
+    <path d="M${x},${y} C${x+s*.1},${y-s*.3} ${x+s*.5},${y-s*.4} ${x+s*.6},${y-s*.2} C${x+s*.7},${y} ${x+s*.4},${y+s*.1} ${x},${y}Z" fill="${d}" opacity=".8"/>
+    <path d="M${x},${y} C${x-s*.05},${y-s*.5} ${x-s*.3},${y-s*.8} ${x-s*.4},${y-s*.7} C${x-s*.5},${y-s*.6} ${x-s*.2},${y-s*.3} ${x},${y}Z" fill="${f}" opacity=".7"/>
+    <path d="M${x},${y} C${x+s*.05},${y-s*.5} ${x+s*.3},${y-s*.8} ${x+s*.4},${y-s*.7} C${x+s*.5},${y-s*.6} ${x+s*.2},${y-s*.3} ${x},${y}Z" fill="${d}" opacity=".7"/>
+    <line x1="${x}" y1="${y}" x2="${x}" y2="${y-s*.85}" stroke="${d}" stroke-width="1" opacity=".4"/>
+  </g>`;
+}
+
+function _bud(x,y,f,d,gold,full) {
+  if (!full) return `
+    <ellipse cx="${x}" cy="${y}" rx="10" ry="14" fill="${d}" opacity=".7"/>
+    <ellipse cx="${x-5}" cy="${y+4}" rx="6" ry="9" fill="${f}" opacity=".6"/>
+    <ellipse cx="${x+5}" cy="${y+4}" rx="6" ry="9" fill="${f}" opacity=".6"/>
+    <ellipse cx="${x}" cy="${y-4}" rx="7" ry="10" fill="${f}" opacity=".7"/>
+    <path d="M${x-3},${y-10} Q${x-6},${y-18} ${x-4},${y-20}" stroke="#f0a090" stroke-width="1" fill="none" opacity=".5"/>
+    <path d="M${x+3},${y-10} Q${x+6},${y-18} ${x+4},${y-20}" stroke="#f0a090" stroke-width="1" fill="none" opacity=".5"/>`;
+
+  return `
+    <ellipse cx="${x}" cy="${y+5}" rx="18" ry="26" fill="${d}" opacity=".85"/>
+    <ellipse cx="${x-10}" cy="${y+12}" rx="11" ry="16" fill="${f}" opacity=".7"/>
+    <ellipse cx="${x+10}" cy="${y+12}" rx="11" ry="16" fill="${f}" opacity=".7"/>
+    <ellipse cx="${x}" cy="${y-4}" rx="12" ry="18" fill="${f}" opacity=".8"/>
+    <circle cx="${x-4}" cy="${y-6}" r="1.5" fill="${gold}" opacity=".7"/>
+    <circle cx="${x+6}" cy="${y-2}" r="1.5" fill="${gold}" opacity=".65"/>
+    <circle cx="${x-8}" cy="${y+4}" r="1.2" fill="${gold}" opacity=".6"/>
+    <circle cx="${x+4}" cy="${y+10}" r="1.5" fill="${gold}" opacity=".65"/>
+    <circle cx="${x}" cy="${y-12}" r="1.5" fill="${gold}" opacity=".7"/>
+    <path d="M${x-5},${y-16} Q${x-10},${y-26} ${x-8},${y-30}" stroke="#e07850" stroke-width="1.2" fill="none" opacity=".7"/>
+    <path d="M${x+5},${y-16} Q${x+10},${y-26} ${x+8},${y-30}" stroke="#e07850" stroke-width="1.2" fill="none" opacity=".7"/>
+    <path d="M${x-2},${y-18} Q${x-4},${y-28} ${x-1},${y-32}" stroke="#d06040" stroke-width="1" fill="none" opacity=".6"/>
+    <path d="M${x+2},${y-18} Q${x+4},${y-28} ${x+1},${y-32}" stroke="#d06040" stroke-width="1" fill="none" opacity=".6"/>
+    <ellipse cx="${x}" cy="${y+5}" rx="22" ry="28" fill="${f}" opacity=".05"/>`;
+}
+
+function drawPlant(stageIdx, healthPct) {
+  const svg = document.getElementById('plant-svg');
+  const hp  = healthPct / 100;
+  const {g,d,s} = plantColors(hp);
+  const GOLD = '#c8a84b';
+  let c = '';
+
+  switch(stageIdx) {
+    case 0: // no seed
+      c = `<text x="100" y="260" text-anchor="middle" font-size="12" fill="${g}" opacity=".4" font-family="monospace">↓ planta semilla</text>`;
+      break;
+    case 1: // seed in soil - germinating
+      c = `<ellipse cx="100" cy="263" rx="7" ry="5" fill="#8B6914" opacity=".8"/>
+           <ellipse cx="100" cy="263" rx="5" ry="3.5" fill="#c8a84b" opacity=".6"/>
+           <line x1="100" y1="260" x2="100" y2="248" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 2" opacity=".5"/>`;
+      break;
+    case 2: // sprout
+      c = `<ellipse cx="100" cy="263" rx="7" ry="5" fill="#8B6914" opacity=".7"/>
+           <line x1="100" y1="260" x2="100" y2="238" stroke="${s}" stroke-width="3" stroke-linecap="round"/>
+           <path d="M100 246 C94 238 88 236 90 230 C92 224 100 226 100 238" fill="${g}" opacity=".8"/>
+           <path d="M100 246 C106 238 112 236 110 230 C108 224 100 226 100 238" fill="${d}" opacity=".7"/>`;
+      break;
+    case 3: // seedling
+      c = `<line x1="100" y1="263" x2="100" y2="230" stroke="${s}" stroke-width="4" stroke-linecap="round"/>
+           ${_lp(100,238,20,g,d,-30)} ${_lp(100,238,20,g,d,30)}
+           ${_cl(100,222,22,g,d,0)}`;
+      break;
+    case 4: // vegetative
+      c = `<line x1="100" y1="265" x2="100" y2="195" stroke="${s}" stroke-width="4.5" stroke-linecap="round"/>
+           <line x1="100" y1="248" x2="82" y2="226" stroke="${s}" stroke-width="2.5" stroke-linecap="round"/>
+           <line x1="100" y1="248" x2="118" y2="226" stroke="${s}" stroke-width="2.5" stroke-linecap="round"/>
+           ${_cl(82,223,28,g,d,-15)} ${_cl(118,223,28,g,d,15)}
+           ${_cl(100,195,32,g,d,0)}`;
+      break;
+    case 5: // bushy vegetative
+      c = `<line x1="100" y1="265" x2="100" y2="178" stroke="${s}" stroke-width="5" stroke-linecap="round"/>
+           <line x1="100" y1="248" x2="76" y2="222" stroke="${s}" stroke-width="3" stroke-linecap="round"/>
+           <line x1="100" y1="248" x2="124" y2="222" stroke="${s}" stroke-width="3" stroke-linecap="round"/>
+           <line x1="100" y1="215" x2="70" y2="194" stroke="${s}" stroke-width="2.5" stroke-linecap="round"/>
+           <line x1="100" y1="215" x2="130" y2="194" stroke="${s}" stroke-width="2.5" stroke-linecap="round"/>
+           ${_cl(76,220,32,g,d,-20)} ${_cl(124,220,32,g,d,20)}
+           ${_cl(68,192,30,d,d,-28)} ${_cl(132,192,30,d,d,28)}
+           ${_cl(100,178,34,g,d,0)}`;
+      break;
+    case 6: // pre-flower / flower
+      c = `<line x1="100" y1="265" x2="100" y2="158" stroke="${s}" stroke-width="5.5" stroke-linecap="round"/>
+           <line x1="100" y1="248" x2="72" y2="218" stroke="${s}" stroke-width="3.5" stroke-linecap="round"/>
+           <line x1="100" y1="248" x2="128" y2="218" stroke="${s}" stroke-width="3.5" stroke-linecap="round"/>
+           <line x1="100" y1="212" x2="66" y2="186" stroke="${s}" stroke-width="3" stroke-linecap="round"/>
+           <line x1="100" y1="212" x2="134" y2="186" stroke="${s}" stroke-width="3" stroke-linecap="round"/>
+           <line x1="100" y1="182" x2="78" y2="165" stroke="${s}" stroke-width="2.5" stroke-linecap="round"/>
+           <line x1="100" y1="182" x2="122" y2="165" stroke="${s}" stroke-width="2.5" stroke-linecap="round"/>
+           ${_cl(70,216,36,d,d,-22)} ${_cl(130,216,36,d,d,22)}
+           ${_cl(64,184,34,g,d,-30)} ${_cl(136,184,34,g,d,30)}
+           ${_cl(76,163,30,g,d,-12)} ${_cl(124,163,30,g,d,12)}
+           ${_bud(100,158,g,d,GOLD,false)}`;
+      break;
+    case 7: // full harvest bud
+      c = `<line x1="100" y1="265" x2="100" y2="143" stroke="${s}" stroke-width="6" stroke-linecap="round"/>
+           <line x1="100" y1="248" x2="68" y2="216" stroke="${s}" stroke-width="4" stroke-linecap="round"/>
+           <line x1="100" y1="248" x2="132" y2="216" stroke="${s}" stroke-width="4" stroke-linecap="round"/>
+           <line x1="100" y1="208" x2="62" y2="180" stroke="${s}" stroke-width="3.5" stroke-linecap="round"/>
+           <line x1="100" y1="208" x2="138" y2="180" stroke="${s}" stroke-width="3.5" stroke-linecap="round"/>
+           <line x1="100" y1="172" x2="72" y2="156" stroke="${s}" stroke-width="3" stroke-linecap="round"/>
+           <line x1="100" y1="172" x2="128" y2="156" stroke="${s}" stroke-width="3" stroke-linecap="round"/>
+           ${_cl(66,214,40,d,d,-22)} ${_cl(134,214,40,d,d,22)}
+           ${_cl(60,178,38,g,d,-32)} ${_cl(140,178,38,g,d,32)}
+           ${_cl(70,154,34,g,d,-12)} ${_cl(130,154,34,g,d,12)}
+           ${_bud(100,143,g,d,GOLD,true)}`;
+      break;
+  }
+  svg.innerHTML = c;
+}
+
+/* ═══════════════════════════════════════════
+   SKY — Real-Time Day/Night Cycle
+   Woli Farm · Web3 Demo
+═══════════════════════════════════════════ */
+'use strict';
+
+function initStars() {
+  const sky = document.getElementById('sky');
+  for (let i = 0; i < 55; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 2 + .4;
+    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*65}%;--op:${(.2+Math.random()*.7).toFixed(2)};--d:${(2+Math.random()*4).toFixed(1)}s;--delay:${(Math.random()*3).toFixed(1)}s`;
+    sky.appendChild(s);
+  }
+}
+
+function initClouds() {
+  const sky = document.getElementById('sky');
+  for (let i = 0; i < 3; i++) {
+    const c = document.createElement('div');
+    c.className = 'cloud';
+    c.style.cssText = `width:${80+Math.random()*120}px;height:${10+Math.random()*40}px;top:${5+Math.random()*40}%;--spd:${(25+Math.random()*30).toFixed(0)}s;animation-delay:-${(Math.random()*30).toFixed(0)}s`;
+    sky.appendChild(c);
+  }
+}
+
+function updateSky(cycleActive, realHour) {
+  const sky    = document.getElementById('sky');
+  const sun    = document.getElementById('sun');
+  const moon   = document.getElementById('moon');
+  const clouds = document.querySelectorAll('.cloud');
+
+  if (!cycleActive) {
+    sky.style.background = '#050c12';
+    sun.style.bottom = '-80px'; sun.style.opacity = '0';
+    moon.style.opacity = '1';
+    clouds.forEach(c => c.style.opacity = '0');
+    return;
+  }
+
+  const hourFrac = realHour / 24;  // 0–1
+  const isDaytime = realHour >= 6 && realHour < 20;
+
+  if (isDaytime) {
+    const dayFrac  = (realHour - 6) / 14;  // 0–1 during daytime
+    const sunBot   = 20 + Math.sin(dayFrac * Math.PI) * 85;
+    // Dawn/dusk tinting
+    const isDawn = realHour < 9, isDusk = realHour >= 17;
+    if (isDawn) {
+      const t = (realHour - 6) / 3;
+      sky.style.background = `hsl(${20 + t*200},${60 - t*30}%,${20 + t*15}%)`;
+    } else if (isDusk) {
+      const t = (realHour - 17) / 3;
+      sky.style.background = `hsl(${220 - t*200},${30 + t*30}%,${35 - t*20}%)`;
+    } else {
+      sky.style.background = '#1a3a5c';
+    }
+    sun.style.bottom  = `${sunBot}px`;
+    sun.style.opacity = '1';
+    moon.style.opacity = '0';
+    clouds.forEach(c => c.style.opacity = '.7');
+  } else {
+    const nightFrac = realHour < 6 ? (6 - realHour) / 6 : (realHour - 20) / 4;
+    sky.style.background = '#050c12';
+    sun.style.bottom = '-80px'; sun.style.opacity = '0';
+    moon.style.opacity = `${(.4 + nightFrac * .6).toFixed(2)}`;
+    clouds.forEach(c => c.style.opacity = '.08');
+  }
+}
+
+/* ═══════════════════════════════════════════
+   SCENE — Grass, Drops, Particles
+   Woli Farm · Web3 Demo
+═══════════════════════════════════════════ */
+'use strict';
+
+function initGrass() {
+  const g = document.getElementById('ground');
+  for (let i = 0; i < 38; i++) {
+    const el = document.createElement('div');
+    el.className = 'grass';
+    const lean = (Math.random() - .5) * 6;
+    el.style.cssText = `left:${Math.random()*100}%;height:${8+Math.random()*18}px;background:hsl(${100+Math.random()*40},60%,${25+Math.random()*20}%);--sw:${(2+Math.random()*2).toFixed(1)}s;--sd:${(Math.random()*2).toFixed(1)}s;--lean:${lean.toFixed(1)}deg`;
+    g.appendChild(el);
+  }
+}
+
+function spawnDrops() {
+  const scene = document.getElementById('scene');
+  const pot   = document.getElementById('pot-wrap');
+  const sr    = scene.getBoundingClientRect();
+  const pr    = pot.getBoundingClientRect();
+  const cx    = pr.left - sr.left + pr.width / 2;
+  const sy    = pr.top  - sr.top  - 40;
+  for (let i = 0; i < 9; i++) {
+    setTimeout(() => {
+      const d = document.createElement('div');
+      d.className = 'drop';
+      d.style.cssText = `left:${cx + (Math.random()-.5)*65}px;top:${sy}px;--dist:${40+Math.random()*45}px;animation-delay:${(Math.random()*.35).toFixed(2)}s`;
+      scene.appendChild(d);
+      setTimeout(() => d.remove(), 1300);
+    }, i * 75);
+  }
+}
+
+function spawnFertParticles() {
+  const scene = document.getElementById('scene');
+  const pot   = document.getElementById('pot-wrap');
+  const sr    = scene.getBoundingClientRect();
+  const pr    = pot.getBoundingClientRect();
+  const cx    = pr.left - sr.left + pr.width / 2;
+  const cy    = pr.top  - sr.top;
+  for (let i = 0; i < 12; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      p.className = 'fert-particle';
+      const angle = Math.random() * Math.PI * 2;
+      const dist  = 20 + Math.random() * 50;
+      p.style.cssText = `left:${cx}px;top:${cy}px;--tx:${(Math.cos(angle)*dist).toFixed(0)}px;--ty:${(Math.sin(angle)*dist).toFixed(0)}px;animation-delay:${(Math.random()*.3).toFixed(2)}s`;
+      scene.appendChild(p);
+      setTimeout(() => p.remove(), 1200);
+    }, i * 60);
+  }
+}
+
+function spawnHarvestBurst() {
+  const colors = ['#4caf78','#c8a84b','#8fd4a8','#f0d080','#2d7a4f','#ffd700'];
+  for (let i = 0; i < 40; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const angle = Math.random() * Math.PI * 2;
+      const dist  = 80 + Math.random() * 180;
+      p.style.cssText = `left:50%;top:50%;background:${colors[i%colors.length]};--tx:${(Math.cos(angle)*dist).toFixed(0)}px;--ty:${(Math.sin(angle)*dist).toFixed(0)}px;animation-delay:${(Math.random()*.5).toFixed(2)}s;animation-duration:${(.8+Math.random()*.7).toFixed(2)}s`;
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1600);
+    }, i * 35);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   ECONOMY — Coin Scoring & Tokenomics Logic
+   Woli Farm · Web3 Demo
+   ═══════════════════════════════════════════
+   DESIGN PRINCIPLES:
+   1. Sustainable loop: perfect play earns ~700 WOLI/cycle,
+      costs ~280 WOLI in supplies → net ~420 WOLI profit
+   2. Casual play still earns: ~100-150 WOLI net per cycle
+   3. Streaks reward consistency (up to +100 WOLI/day bonus)
+   4. Harvest NFT rarity based on score → social/status incentive
+   5. All values configurable in config.js for balancing
+═══════════════════════════════════════════ */
+
+'use strict';
+
+const Econ = (() => {
+
+  // ── Score a completed day ──────────────────
+  function scorePreviousDay(state, dayNum) {
+    const ot = state.todayOnTime;
+    const allWaterOnTime = ot.w.every(v => v === true);
+    const allFertOnTime  = ot.f.every(v => v === true);
+    const allPerfect     = allWaterOnTime && allFertOnTime;
+
+    let coinsThisDay = 0;
+    let perfect      = false;
+
+    if (allPerfect) {
+      // Full reward: base + streak bonus
+      coinsThisDay = CFG.COINS_PER_PERFECT_DAY;
+      state.streakDays++;
+      state.maxStreak = Math.max(state.maxStreak, state.streakDays);
+      const streakBonus = Math.min(state.streakDays * CFG.COINS_STREAK_BONUS, CFG.COINS_STREAK_CAP);
+      coinsThisDay += streakBonus;
+      state.perfectDays++;
+      perfect = true;
+    } else {
+      // Partial / late reward (0–10 coins)
+      const tasksTotal = CFG.WATERS_PER_DAY + CFG.FERTS_PER_DAY;
+      const doneCount  = ot.w.filter(Boolean).length + ot.f.filter(Boolean).length;
+      // We don't track "late" vs "on-time" perfectly here — if tasks are done
+      // but not all on-time, doneCount < tasksTotal after scoring
+      const ratio = doneCount / tasksTotal;
+      coinsThisDay = Math.round(CFG.COINS_PER_LATE_DAY_MAX * ratio);
+      state.streakDays = 0; // break streak
+    }
+
+    state.coins      += coinsThisDay;
+    state.coinsEarned += coinsThisDay;
+
+    state.dayHistory.push({
+      day:     dayNum,
+      coins:   coinsThisDay,
+      perfect,
+      health:  state.health,
+      streak:  state.streakDays,
+    });
+
+    return { coinsThisDay, perfect };
+  }
+
+  // ── Score final harvest ────────────────────
+  function scoreHarvest(state) {
+    let bonus = CFG.COINS_HARVEST_BASE;
+    bonus += state.health * CFG.COINS_HARVEST_HEALTH;
+    bonus += state.perfectDays * CFG.COINS_HARVEST_PERFECT;
+    state.coins       += bonus;
+    state.coinsEarned += bonus;
+    state.totalCyclesCompleted++;
+    return bonus;
+  }
+
+  // ── Compute NFT rarity for a completed cycle ──
+  function computeRarity(state) {
+    // Max possible score: 7 perfect days with max streak bonus + full health harvest
+    const maxPossible = (CFG.COINS_PER_PERFECT_DAY + CFG.COINS_STREAK_CAP) * 7
+                      + CFG.COINS_HARVEST_BASE
+                      + 100 * CFG.COINS_HARVEST_HEALTH
+                      + 7   * CFG.COINS_HARVEST_PERFECT;
+
+    const pct = (state.coinsEarned / maxPossible) * 100;
+    const rarity = CFG.RARITY.find(r => pct >= r.min) || CFG.RARITY[CFG.RARITY.length - 1];
+    return { pct: Math.round(pct), ...rarity };
+  }
+
+  // ── Shop: buy items ────────────────────────
+  function buy(state, itemKey) {
+    const items = shopItems();
+    const item  = items.find(i => i.key === itemKey);
+    if (!item) return { ok: false, msg: 'Ítem no encontrado.' };
+    if (state.coins < item.price) return { ok: false, msg: `Necesitas ${item.price} WOLI. Tienes ${state.coins}.` };
+
+    state.coins      -= item.price;
+    state.coinsSpent += item.price;
+
+    item.gives.forEach(g => {
+      state[g.key] = (state[g.key] || 0) + g.amount;
+    });
+
+    return { ok: true, msg: `✓ ${item.name} comprado por ${item.price} WOLI.` };
+  }
+
+  // ── Shop item catalogue ────────────────────
+  function shopItems() {
+    return [
+      {
+        key:    'water1',
+        name:   '💧 Agua × 1',
+        desc:   '1 unidad de agua para regar',
+        price:  CFG.PRICE_WATER,
+        gives:  [{ key: 'water', amount: 1 }],
+        badge:  null,
+      },
+      {
+        key:    'water3',
+        name:   '💧 Agua × 3',
+        desc:   'Pack de 3 riegos — ahorra 5 WOLI',
+        price:  CFG.PRICE_WATER_PACK,
+        gives:  [{ key: 'water', amount: 3 }],
+        badge:  'AHORRO',
+      },
+      {
+        key:    'fert1',
+        name:   '🌿 Fertilizante × 1',
+        desc:   '1 aplicación de fertilizante',
+        price:  CFG.PRICE_FERT,
+        gives:  [{ key: 'fert', amount: 1 }],
+        badge:  null,
+      },
+      {
+        key:    'fert2',
+        name:   '🌿 Fertilizante × 2',
+        desc:   'Pack doble — ahorra 5 WOLI',
+        price:  CFG.PRICE_FERT_PACK,
+        gives:  [{ key: 'fert', amount: 2 }],
+        badge:  'AHORRO',
+      },
+      {
+        key:    'seed1',
+        name:   '🌱 Semilla Premium',
+        desc:   'Semilla certificada para nuevo ciclo',
+        price:  CFG.PRICE_SEED,
+        gives:  [{ key: 'seeds', amount: 1 }],
+        badge:  null,
+      },
+      {
+        key:    'kit1',
+        name:   '🎒 Kit Iniciador',
+        desc:   '1 semilla + 3 agua + 2 fert — ahorra 10 WOLI',
+        price:  CFG.PRICE_STARTER_KIT,
+        gives:  [{ key: 'seeds', amount: 1 }, { key: 'water', amount: 3 }, { key: 'fert', amount: 2 }],
+        badge:  'MEJOR VALOR',
+      },
+    ];
+  }
+
+  // ── Economy summary for UI ─────────────────
+  function summary(state) {
+    const spent   = state.coinsSpent;
+    const earned  = state.coinsEarned;
+    const net     = earned - spent;
+    const days    = state.dayHistory.length;
+    const perfect = state.dayHistory.filter(d => d.perfect).length;
+    return { spent, earned, net, days, perfect, balance: state.coins };
+  }
+
+  return { scorePreviousDay, scoreHarvest, computeRarity, buy, shopItems, summary };
+})();
+
+/* ═══════════════════════════════════════════
+   SHOP — Modal Rendering
+   Woli Farm · Web3 Demo
+═══════════════════════════════════════════ */
+'use strict';
+
+const Shop = (() => {
+
+  function render(state) {
+    const grid = document.getElementById('shop-grid');
+    const bal  = document.getElementById('shop-balance');
+    bal.textContent = state.coins;
+
+    const items = Econ.shopItems();
+    grid.innerHTML = items.map(item => {
+      const canAfford = state.coins >= item.price;
+      return `
+      <div class="shop-item ${canAfford ? '' : 'shop-item-disabled'}">
+        ${item.badge ? `<div class="shop-badge">${item.badge}</div>` : ''}
+        <div class="shop-item-name">${item.name}</div>
+        <div class="shop-item-desc">${item.desc}</div>
+        <div class="shop-item-footer">
+          <span class="shop-price">🪙 ${item.price}</span>
+          <button class="shop-buy-btn" onclick="Farm.buy('${item.key}')"
+            ${canAfford ? '' : 'disabled'}>Comprar</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    renderEconSummary(state);
+  }
+
+  function renderEconSummary(state) {
+    const el = document.getElementById('econ-summary');
+    const s  = Econ.summary(state);
+    const daysLeft = CFG.CYCLE_DAYS - (state.dayHistory.length || 0);
+
+    // Estimate remaining supply cost
+    const waterLeft = Math.max(0, daysLeft) * CFG.WATERS_PER_DAY * CFG.PRICE_WATER;
+    const fertLeft  = Math.max(0, daysLeft) * CFG.FERTS_PER_DAY  * CFG.PRICE_FERT;
+    const supplyCost = waterLeft + fertLeft;
+
+    // Project earnings if current pace continues
+    const avgPerDay  = s.days > 0 ? s.earned / s.days : 0;
+    const projected  = s.earned + Math.round(avgPerDay * daysLeft);
+
+    el.innerHTML = `
+      <div class="econ-grid">
+        <div class="econ-item">
+          <div class="econ-val positive">+${s.earned}</div>
+          <div class="econ-lbl">WOLI ganados</div>
+        </div>
+        <div class="econ-item">
+          <div class="econ-val negative">-${s.spent}</div>
+          <div class="econ-lbl">WOLI gastados</div>
+        </div>
+        <div class="econ-item">
+          <div class="econ-val ${s.net >= 0 ? 'positive' : 'negative'}">${s.net >= 0 ? '+' : ''}${s.net}</div>
+          <div class="econ-lbl">Ganancia neta</div>
+        </div>
+        <div class="econ-item">
+          <div class="econ-val">${s.perfect}/${s.days}</div>
+          <div class="econ-lbl">Días perfectos</div>
+        </div>
+        <div class="econ-item">
+          <div class="econ-val warning">~${supplyCost}</div>
+          <div class="econ-lbl">Costo estimado resto</div>
+        </div>
+        <div class="econ-item">
+          <div class="econ-val positive">~${projected}</div>
+          <div class="econ-lbl">Proyección final</div>
+        </div>
+      </div>
+      <div class="econ-note">
+        💡 Ciclo perfecto: gana ~700 WOLI, cuesta ~${CFG.PRICE_WATER*CFG.WATERS_PER_DAY*7 + CFG.PRICE_FERT*7} WOLI en suministros. 
+        Ganancia neta máxima: ~${700 - (CFG.PRICE_WATER*CFG.WATERS_PER_DAY*7 + CFG.PRICE_FERT*7)} WOLI por ciclo.
+      </div>`;
+  }
+
+  return { render };
+})();
+
+/* ═══════════════════════════════════════════
+   NOTIFICATIONS — In-App Alert System
+   Woli Farm · Web3 Demo
+═══════════════════════════════════════════ */
+
+'use strict';
+
+const Notifications = (() => {
+
+  const active = {};  // id → { el, timer }
+
+  // ── Fire a task notification ───────────────
+  function fire(task) {
+    const isWater = task.type === 'water';
+    const icon    = isWater ? '💧' : '🌿';
+    const titles  = {
+      water: ['¡Hora del riego!', '¡Tu planta tiene sed!', 'Tercer riego del día'],
+      fert:  ['¡Fertilizar ahora!'],
+    };
+    const subs = {
+      water: ['Riega tu planta para ganar 100 WOLI hoy', 'Segundo riego — ¡no pierdas la racha!', 'Último riego del día'],
+      fert:  ['Aplica fertilizante para máximo crecimiento'],
+    };
+    const idx   = task.index || 0;
+    const title = (titles[task.type] || ['Tarea lista'])[idx] || titles[task.type][0];
+    const sub   = (subs[task.type]   || ['Completa la tarea'])[idx] || subs[task.type][0];
+    const mins  = CFG.TASK_WINDOW_MINS;
+
+    showNotif(task.id, icon, title, sub, mins);
+
+    // Try browser Push notification as well
+    _tryPush(icon + ' ' + title, sub);
+  }
+
+  // ── Show the in-app notification bar ──────
+  function showNotif(id, icon, title, sub, windowMins) {
+    const el = document.getElementById('notif');
+    document.getElementById('notif-icon').textContent  = icon;
+    document.getElementById('notif-title').textContent = title;
+    document.getElementById('notif-sub').textContent   = sub;
+    document.getElementById('notif-timer').textContent = `⏱ ${windowMins}min`;
+    el.className = 'notif-show';
+
+    // Countdown timer display
+    let remaining = windowMins * 60;
+    const countdown = setInterval(() => {
+      remaining--;
+      const m = Math.floor(remaining / 60);
+      const s = remaining % 60;
+      const timerEl = document.getElementById('notif-timer');
+      if (timerEl) timerEl.textContent = `⏱ ${m}:${String(s).padStart(2,'0')}`;
+      if (remaining <= 0) {
+        clearInterval(countdown);
+        dismiss(id);
+      }
+    }, 1000);
+
+    active[id] = { el, countdown };
+
+    // Pulse the action buttons
+    _pulseButtons(id.startsWith('water') ? 'btn-water' : 'btn-fert');
+  }
+
+  // ── Dismiss a notification ─────────────────
+  function dismiss(id) {
+    if (active[id]) {
+      clearInterval(active[id].countdown);
+      delete active[id];
+    }
+    // If no more active notifications, hide bar
+    if (Object.keys(active).length === 0) {
+      const el = document.getElementById('notif');
+      if (el) el.className = 'notif-hidden';
+    }
+  }
+
+  function dismissAll() {
+    Object.keys(active).forEach(id => dismiss(id));
+  }
+
+  // ── Pulse button hint ─────────────────────
+  function _pulseButtons(btnId) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.classList.add('pulse-alert');
+    setTimeout(() => btn.classList.remove('pulse-alert'), 8000);
+  }
+
+  // ── Browser Push API ─────────────────────
+  function requestPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }
+
+  function _tryPush(title, body) {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    try {
+      new Notification(title, { body, icon: '🌿', badge: '🌿' });
+    } catch(e) {}
+  }
+
+  return { fire, dismiss, dismissAll, requestPermission };
+})();
+
+/* ═══════════════════════════════════════════
+   UI — Render, Clock, Log, Toast, Modals
+   Woli Farm · Web3 Demo
+═══════════════════════════════════════════ */
+'use strict';
+
+const UI = (() => {
+
+  let _toastTimer = null;
+
+  // ── Toast ──────────────────────────────────
+  function toast(msg, duration = 2800) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), duration);
+  }
+
+  // ── Log ────────────────────────────────────
+  function log(state, msg, type = '') {
+    const container = document.getElementById('log');
+    const line = document.createElement('div');
+    line.className = `log-line ${type ? 'log-' + type : ''}`;
+    const d = new Date();
+    const ts = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    line.innerHTML = `<span class="log-ts">${ts}</span> ${msg}`;
+    container.insertBefore(line, container.firstChild);
+    while (container.children.length > 12) container.removeChild(container.lastChild);
+  }
+
+  function clearLog() { document.getElementById('log').innerHTML = ''; }
+
+  // ── Clock display ──────────────────────────
+  function updateClock(state) {
+    const now  = new Date();
+    const h    = String(now.getHours()).padStart(2,'0');
+    const m    = String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('clock-h').textContent = h;
+    document.getElementById('clock-m').textContent = m;
+
+    // Day progress bar (fraction of current day elapsed)
+    const dayFrac = (now.getHours() * 60 + now.getMinutes()) / 1440;
+    document.getElementById('day-fill').style.width   = `${dayFrac * 100}%`;
+    document.getElementById('day-marker').style.left  = `${dayFrac * 100}%`;
+    document.getElementById('day-num').textContent    = state.cycleActive ? state.cycleDay : 0;
+  }
+
+  // ── Status cards ───────────────────────────
+  function updateStatus(state) {
+    document.getElementById('s-water').textContent  = `${state.dayWaters}/${CFG.WATERS_PER_DAY}`;
+    document.getElementById('s-fert').textContent   = `${state.dayFert}/${CFG.FERTS_PER_DAY}`;
+    document.getElementById('s-health').textContent = `${Math.round(state.health)}%`;
+    document.getElementById('s-streak').textContent = state.streakDays;
+    document.getElementById('wallet-display').textContent = state.coins;
+  }
+
+  // ── Progress bar & stage ───────────────────
+  function updateProgress(state) {
+    const day = Math.min(state.cycleDay, CFG.CYCLE_DAYS);
+    const pct = Math.round((day / CFG.CYCLE_DAYS) * 100);
+    document.getElementById('prog-fill').style.width = `${pct}%`;
+    document.getElementById('prog-pct').textContent  = `${pct}%`;
+    document.getElementById('p-day').textContent     = day;
+
+    const stageData = CFG.STAGES[Math.min(state.stageIdx, CFG.STAGES.length - 1)];
+    document.getElementById('stage-text').textContent = stageData
+      ? stageData.name
+      : 'Sin semilla';
+  }
+
+  // ── Action buttons ─────────────────────────
+  function updateButtons(state) {
+    const btnW = document.getElementById('btn-water');
+    const btnF = document.getElementById('btn-fert');
+
+    // Inventory display
+    document.getElementById('inv-water').textContent = `x${state.water}`;
+    document.getElementById('inv-fert').textContent  = `x${state.fert}`;
+
+    // Water button
+    const waterTaskActive = state.cycleActive
+      && Clock.hasActiveTask(state, 'water')
+      && state.dayWaters < CFG.WATERS_PER_DAY;
+    const canWater = state.cycleActive
+      && state.water > 0
+      && state.dayWaters < CFG.WATERS_PER_DAY;
+
+    if (!state.cycleActive) {
+      btnW.className = state.seeds > 0 ? 'abtn abtn-plant' : 'abtn abtn-water';
+      btnW.disabled = state.seeds < 1;
+      btnW.querySelector('.abtn-icon').textContent  = '🌱';
+      btnW.querySelector('.abtn-label').textContent = state.seeds > 0 ? 'Plantar Semilla' : 'Sin semillas';
+      btnW.querySelector('.abtn-sub').textContent   = `x${state.seeds}`;
+    } else if (!canWater) {
+      btnW.className = 'abtn abtn-water abtn-done';
+      btnW.disabled = true;
+      btnW.querySelector('.abtn-label').textContent = state.dayWaters >= CFG.WATERS_PER_DAY ? 'Regado ✓' : 'Sin agua';
+    } else {
+      btnW.className = `abtn abtn-water ${waterTaskActive ? 'abtn-urgent' : ''}`;
+      btnW.disabled = false;
+      btnW.querySelector('.abtn-label').textContent = waterTaskActive ? '¡Regar AHORA!' : 'Regar';
+    }
+
+    // Fert button
+    const fertTaskActive = state.cycleActive
+      && Clock.hasActiveTask(state, 'fert')
+      && state.dayFert < CFG.FERTS_PER_DAY;
+    const canFert = state.cycleActive
+      && state.fert > 0
+      && state.dayFert < CFG.FERTS_PER_DAY;
+
+    if (!state.cycleActive) {
+      btnF.className = 'abtn abtn-fert';
+      btnF.disabled = true;
+      btnF.querySelector('.abtn-label').textContent = 'Fertilizar';
+    } else if (!canFert) {
+      btnF.className = 'abtn abtn-fert abtn-done';
+      btnF.disabled = true;
+      btnF.querySelector('.abtn-label').textContent = state.dayFert >= CFG.FERTS_PER_DAY ? 'Fertilizado ✓' : 'Sin fertilizante';
+    } else {
+      btnF.className = `abtn abtn-fert ${fertTaskActive ? 'abtn-urgent' : ''}`;
+      btnF.disabled = false;
+      btnF.querySelector('.abtn-label').textContent = fertTaskActive ? '¡Fertilizar AHORA!' : 'Fertilizar';
+    }
+  }
+
+  // ── Task alerts ────────────────────────────
+  function updateTaskAlerts(state) {
+    const el = document.getElementById('task-alerts');
+    const activeTasks = state.tasks
+      ? state.tasks.filter(t => t.status === 'notified')
+      : [];
+
+    if (activeTasks.length === 0) { el.innerHTML = ''; return; }
+
+    el.innerHTML = activeTasks.map(t => {
+      const mins = Clock.taskTimeLeft(state, t.type);
+      const timeStr = mins !== null
+        ? (mins > 0 ? `${mins} min` : 'venciendo')
+        : '';
+      const isWater = t.type === 'water';
+      return `<div class="task-alert task-${t.type}">
+        <span>${isWater ? '💧' : '🌿'} ${isWater ? 'Regar ahora' : 'Fertilizar ahora'}</span>
+        <span class="task-timer">${timeStr}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Soil moisture visual ───────────────────
+  function updateSoilBar(state) {
+    // Moisture: resets with each watering, drains over time
+    const waterPct = Math.min(100, (state.dayWaters / CFG.WATERS_PER_DAY) * 100);
+    document.getElementById('soil-fill').style.width = `${waterPct}%`;
+  }
+
+  // ── Harvest modal ──────────────────────────
+  function showHarvest(state, harvestBonus, rarity) {
+    const perfect = state.dayHistory.filter(d => d.perfect).length;
+    document.getElementById('h-perfect').textContent  = `${perfect}/7`;
+    document.getElementById('h-health').textContent   = `${Math.round(state.health)}%`;
+    document.getElementById('h-streak').textContent   = state.maxStreak;
+    document.getElementById('h-tokens').textContent   = `+${harvestBonus} (total: ${state.coins})`;
+    document.getElementById('h-rarity').textContent   = rarity.label;
+    document.getElementById('h-rarity').style.color   = rarity.color;
+    document.getElementById('h-nft-rarity').textContent = rarity.label;
+    document.getElementById('h-nft-rarity').style.color = rarity.color;
+    document.getElementById('harvest-overlay').classList.add('show');
+  }
+
+  function hideHarvest() {
+    document.getElementById('harvest-overlay').classList.remove('show');
+  }
+
+  // ── Shop modal ─────────────────────────────
+  function openShop() {
+    const state = Clock.getState();
+    Shop.render(state);
+    document.getElementById('shop-overlay').classList.add('show');
+  }
+
+  function openShopFromHarvest() {
+    hideHarvest();
+    openShop();
+  }
+
+  function closeShop(e) {
+    if (e && e.target !== document.getElementById('shop-overlay')) return;
+    closeShopBtn();
+  }
+
+  function closeShopBtn() {
+    document.getElementById('shop-overlay').classList.remove('show');
+  }
+
+  // ── Full render ────────────────────────────
+  function render(state) {
+    updateClock(state);
+    updateStatus(state);
+    updateProgress(state);
+    updateButtons(state);
+    updateTaskAlerts(state);
+    updateSoilBar(state);
+    drawPlant(state.stageIdx, state.health);
+    updateSky(state.cycleActive, new Date().getHours());
+  }
+
+  return {
+    toast, log, clearLog, render,
+    showHarvest, hideHarvest,
+    openShop, openShopFromHarvest, closeShop, closeShopBtn
+  };
+})();
+
+/* ═══════════════════════════════════════════
+   FARM — Core Game Actions
+   Woli Farm · Web3 Demo
+═══════════════════════════════════════════ */
+'use strict';
+
+const Farm = (() => {
+
+  let S = null; // reference to current state (set by main.js)
+
+  function init(state) { S = state; }
+
+  // ── Plant seed ─────────────────────────────
+  function plant() {
+    if (S.seeds < 1) {
+      UI.toast('Sin semillas. Compra en la tienda. 🛒');
+      return;
+    }
+    S.seeds--;
+    S.cycleActive    = true;
+    S.cycleStartTime = Date.now();
+    S.cycleDay       = 1;
+    S.stageIdx       = 1;
+    S.health         = 100;
+    S.perfectDays    = 0;
+    S.streakDays     = 0;
+    S.maxStreak      = 0;
+    S.coinsEarned    = 0;
+    S.coinsSpent     = 0;
+    S.dayHistory     = [];
+    S.lastDayChecked = null;
+    S.dayWaters      = 0;
+    S.dayFert        = 0;
+    S.todayOnTime    = { w: [false,false,false], f: [false] };
+    S.tasks          = [];
+
+    saveState(S);
+    UI.log(S, '🌱 Semilla plantada. ¡Ciclo de 7 días iniciado!', 'good');
+    UI.toast('¡Semilla plantada! Espera las notificaciones de riego.');
+    Notifications.requestPermission();
+  }
+
+  // ── Water ──────────────────────────────────
+  function water() {
+    if (!S.cycleActive) {
+      // Act as plant button when no cycle running
+      plant();
+      return;
+    }
+    if (S.water < 1)    { UI.toast('Sin agua. Compra en la tienda. 🛒'); UI.openShop(); return; }
+    if (S.dayWaters >= CFG.WATERS_PER_DAY) { UI.toast('Ya regaste 3 veces hoy. ¡Bien hecho!'); return; }
+
+    const timing = Clock.completeTask(S, 'water');
+    S.water--;
+    S.dayWaters++;
+    S.health = Math.min(CFG.HEALTH_MAX, S.health + CFG.HEALTH_BOOST_WATER);
+
+    spawnDrops();
+
+    if (timing === 'ontime') {
+      UI.log(S, `💧 Riego ${S.dayWaters}/3 — ¡A TIEMPO! +potencial 100 🪙`, 'good');
+      UI.toast('💧 ¡Regado a tiempo! Sigue así para 100 WOLI hoy.');
+    } else if (timing === 'late') {
+      UI.log(S, `💧 Riego ${S.dayWaters}/3 — tarde (máx 10 🪙 hoy)`, 'warn');
+      UI.toast('💧 Regado, pero tarde. Perderás parte de los WOLI.');
+    } else {
+      UI.log(S, `💧 Riego ${S.dayWaters}/3 — sin ventana activa`, '');
+      UI.toast('💧 Regado fuera de ventana.');
+    }
+
+    saveState(S);
+    UI.render(S);
+  }
+
+  // ── Fertilize ─────────────────────────────
+  function fertilize() {
+    if (!S.cycleActive) { UI.toast('Primero planta una semilla.'); return; }
+    if (S.fert < 1)    { UI.toast('Sin fertilizante. Compra en la tienda. 🛒'); UI.openShop(); return; }
+    if (S.dayFert >= CFG.FERTS_PER_DAY) { UI.toast('Ya fertilizaste hoy. ¡Perfecto!'); return; }
+
+    const timing = Clock.completeTask(S, 'fert');
+    S.fert--;
+    S.dayFert++;
+    S.health = Math.min(CFG.HEALTH_MAX, S.health + CFG.HEALTH_BOOST_FERT);
+
+    spawnFertParticles();
+
+    if (timing === 'ontime') {
+      UI.log(S, `🌿 Fertilizado — ¡A TIEMPO! +8 salud 💚`, 'good');
+      UI.toast('🌿 ¡Fertilizado a tiempo! +8 salud.');
+    } else if (timing === 'late') {
+      UI.log(S, `🌿 Fertilizado — tarde`, 'warn');
+      UI.toast('🌿 Fertilizado, pero tarde.');
+    } else {
+      UI.log(S, `🌿 Fertilizado fuera de ventana`, '');
+      UI.toast('🌿 Fertilizado.');
+    }
+
+    saveState(S);
+    UI.render(S);
+  }
+
+  // ── Buy from shop ──────────────────────────
+  function buy(itemKey) {
+    const result = Econ.buy(S, itemKey);
+    UI.toast(result.msg);
+    if (result.ok) {
+      UI.log(S, `🛒 ${result.msg}`, 'good');
+      Shop.render(S); // refresh shop prices/balance
+    }
+    saveState(S);
+    UI.render(S);
+  }
+
+  // ── Day transition (called by Clock) ───────
+  function onDayChange(state, newDay) {
+    S = state;
+
+    if (newDay === 8 || S.cycleComplete) {
+      // Harvest!
+      const bonus   = Econ.scoreHarvest(S);
+      const rarity  = Econ.computeRarity(S);
+      S.cycleActive = false;
+      saveState(S);
+      spawnHarvestBurst();
+      setTimeout(() => UI.showHarvest(S, bonus, rarity), 1200);
+      UI.log(S, `🌸 ¡COSECHA! +${bonus} WOLI — Rareza: ${rarity.label}`, 'harvest');
+      return;
+    }
+
+    // New day — update stage
+    S.stageIdx = Math.min(newDay, CFG.STAGES.length - 1);
+    UI.log(S, `🌅 Día ${newDay} — ${CFG.STAGES[S.stageIdx]?.name}`, 'day');
+    UI.toast(`🌅 Día ${newDay}/7 — ${CFG.STAGES[S.stageIdx]?.name}`);
+    saveState(S);
+    UI.render(S);
+  }
+
+  // ── New cycle ──────────────────────────────
+  function newCycle() {
+    UI.hideHarvest();
+    // Reset daily counters but keep wallet
+    const coins  = S.coins;
+    const seeds  = S.seeds;
+    const water  = S.water;
+    const fert   = S.fert;
+    const total  = S.totalCyclesCompleted;
+    S = freshState();
+    S.coins = coins; S.seeds = seeds;
+    S.water = water; S.fert  = fert;
+    S.totalCyclesCompleted = total;
+    saveState(S);
+    Clock.setState(S);
+    UI.clearLog();
+    UI.log(S, '🔄 Nuevo ciclo listo. ¡Planta una semilla!', 'good');
+    UI.render(S);
+  }
+
+  // ── Reset ─────────────────────────────────
+  function confirmReset() {
+    if (confirm('¿Reiniciar todo? Perderás semilla, suministros y WOLI del ciclo actual.\n\nTu balance de WOLI se mantiene.')) {
+      const coins = S.coins;
+      const total = S.totalCyclesCompleted;
+      S = freshState();
+      S.coins = coins;
+      S.totalCyclesCompleted = total;
+      saveState(S);
+      Clock.setState(S);
+      UI.clearLog();
+      UI.log(S, '🔄 Reiniciado. Balance WOLI preservado.', '');
+      UI.render(S);
+    }
+  }
+
+  return { init, plant, water, fertilize, buy, onDayChange, newCycle, confirmReset };
+})();
+
+/* ═══════════════════════════════════════════
+   MAIN — Boot Sequence
+   Woli Farm · Web3 Demo
+   v2: Cloud Save + User Badge integrado
+═══════════════════════════════════════════ */
+'use strict';
+
+document.addEventListener('DOMContentLoaded', async () => {
+
+  // 1. Cargar estado (cloud si hay sesión, si no localStorage)
+  const state = await loadStateCloud();
+
+  // 2. Proteger propiedades críticas con anti-cheat
+  if (window.Security) Security.protectStateObject(state);
+
+  // 3. Init farm logic
+  Farm.init(state);
+
+  // 4. Build scene
+  initStars();
+  initClouds();
+  initGrass();
+
+  // 5. Start real-time clock
+  Clock.start(state,
+    (s) => UI.render(s),
+    (s, day) => Farm.onDayChange(s, day)
+  );
+
+  // 6. Initial render
+  UI.render(state);
+  UI.log(state, '🌿 Woli Farm iniciado — ciclo de 7 días reales', '');
+
+  if (state.cycleActive) {
+    UI.log(state, `📅 Ciclo activo — Día ${state.cycleDay}/7`, 'day');
+  } else {
+    UI.log(state, `💰 Balance: ${state.coins} WOLI · Semillas: ${state.seeds}`, 'good');
+  }
+
+  // 7. Inyectar badge de usuario en el header
+  _injectUserBadge();
+
+  // 8. Request notification permission on first interaction
+  document.body.addEventListener('click', () => {
+    Notifications.requestPermission();
+  }, { once: true });
+});
+
+/* ── User badge en el header ── */
+function _injectUserBadge() {
+  if (typeof firebase === 'undefined') return;
+
+  firebase.auth().onAuthStateChanged(function(user) {
+    const slot = document.getElementById('user-badge-slot');
+    if (!slot) return;
+
+    if (user) {
+      const name     = (user.displayName || user.email.split('@')[0]).split(' ')[0];
+      const initials = (user.displayName || 'W').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      const avatar   = user.photoURL
+        || `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=1a4a28&color=6ee0a0&size=64&bold=true`;
+
+      slot.innerHTML =
+        `<a href="auth.html" title="Mi cuenta" style="` +
+        `display:flex;align-items:center;gap:7px;padding:4px 10px 4px 4px;margin-right:8px;` +
+        `background:rgba(77,184,122,0.12);border:1px solid rgba(77,184,122,0.25);` +
+        `border-radius:20px;text-decoration:none;cursor:pointer;">` +
+          `<img src="${avatar}" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:1px solid rgba(77,184,122,0.4);">` +
+          `<span style="font-size:.72rem;color:rgba(245,240,232,.75);font-family:var(--font-b);max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>` +
+        `</a>`;
+    } else {
+      slot.innerHTML =
+        `<a href="auth.html" title="Iniciar sesión" style="` +
+        `display:flex;align-items:center;gap:5px;padding:4px 10px;margin-right:8px;` +
+        `background:transparent;border:1px solid rgba(77,184,122,0.2);border-radius:20px;` +
+        `text-decoration:none;font-size:.72rem;color:rgba(245,240,232,.45);font-family:var(--font-b);">` +
+        `👤 Iniciar sesión</a>`;
+    }
+  });
+}
+
+</script>
 
 </body>
 </html>
