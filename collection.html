@@ -144,10 +144,31 @@ body { top: 0 !important; }
 .goog-te-gadget::before { content: '🌐 '; color: #4caf78; font-size: 0.8rem; }
 .goog-tooltip, .goog-tooltip:hover { display: none !important; }
 .goog-text-highlight { background-color: transparent !important; border: none !important; box-shadow: none !important; }
-#google_translate_element { display: inline-flex; align-items: center; }
+#google_translate_element {
+  position: fixed !important;
+  top: 14px !important;
+  right: 14px !important;
+  z-index: 999999 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
 </style>
 </head>
 <body>
+
+<!-- Google Translate Widget — fixed top-right -->
+<div id="google_translate_element"></div>
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'es',
+    includedLanguages: 'en,es,de,tl,zh-CN,zh-TW,pt,fr,it,ja,ko,ru,ar,hi',
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+    autoDisplay: false
+  }, 'google_translate_element');
+}
+</script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 
 <header>
   <div class="brand">
@@ -155,7 +176,6 @@ body { top: 0 !important; }
     <div class="brand-sub">MI COLECCIÓN</div>
   </div>
   <div class="header-right">
-    <div id="google_translate_element"></div>
     <a href="index.html" class="btn-back">← Volver al juego</a>
   </div>
 </header>
@@ -460,19 +480,6 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 </script>
-
-<!-- Google Translate Widget loader -->
-<script type="text/javascript">
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement({
-    pageLanguage: 'es',
-    includedLanguages: 'en,es,de,tl,zh-CN,zh-TW,pt,fr,it,ja,ko,ru,ar,hi',
-    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-    autoDisplay: false
-  }, 'google_translate_element');
-}
-</script>
-<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </body>
 </html>
