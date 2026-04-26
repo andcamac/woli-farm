@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Woli Farm — Inicia Sesión</title>
+<meta name="theme-color" content="#0a1f10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK (en HEAD, sincrónico) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<!-- Firebase Config -->
+<script src="js/firebase-config.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g1:#0a1f10;--g2:#1a4a2e;--g3:#2d7a4f;--g4:#4caf78;--g5:#8fd4a8;
+  --gold:#c8a84b;--gold2:#f0d080;--cream:#f5f0e8;
+  --red:#e05454;--white:#fff;
+  --font-d:'Playfair Display',serif;
+  --font-b:'DM Sans',sans-serif;
+  --font-m:'DM Mono',monospace;
+}
+html,body{min-height:100%;font-family:var(--font-b);background:var(--g1);color:var(--cream);overflow-x:hidden}
+
+.bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 50% 0%,#1a4a28 0%,#0a1f10 60%)}
+.particle{position:fixed;font-size:1.1rem;opacity:0;pointer-events:none;z-index:0;animation:floatUp var(--dur,8s) var(--del,0s) ease-in-out infinite}
+@keyframes floatUp{0%{opacity:0;transform:translateY(0) rotate(0deg)}20%{opacity:.5}80%{opacity:.2}100%{opacity:0;transform:translateY(-100px) rotate(15deg)}}
+
+.wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem}
+
+.logo-area{text-align:center;margin-bottom:1.8rem;animation:fadeDown .7s ease both}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
+.logo-icon{font-size:3rem;display:block;filter:drop-shadow(0 0 18px var(--g4));animation:glow 3s ease-in-out infinite}
+@keyframes glow{0%,100%{filter:drop-shadow(0 0 12px var(--g4))}50%{filter:drop-shadow(0 0 28px var(--g5))}}
+.logo-title{font-family:var(--font-d);font-size:2.6rem;font-weight:900;letter-spacing:.1em;color:var(--white);line-height:1;margin-top:.4rem}
+.logo-title span{color:var(--g4)}
+.logo-tag{font-family:var(--font-m);font-size:.6rem;letter-spacing:.22em;color:var(--g4);opacity:.8;margin-top:.4rem;text-transform:uppercase}
+
+.card{width:100%;max-width:400px;background:rgba(15,45,24,.88);border:1px solid rgba(77,184,122,.2);border-radius:18px;padding:1.8rem;backdrop-filter:blur(10px);box-shadow:0 20px 60px rgba(0,0,0,.5);animation:fadeUp .7s .15s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+.msg{padding:.7rem 1rem;border-radius:10px;font-size:.82rem;margin-bottom:1rem;display:none;line-height:1.5}
+.msg.error{display:block;background:rgba(224,84,84,.15);border:1px solid rgba(224,84,84,.35);color:#ff8888}
+.msg.success{display:block;background:rgba(77,184,122,.15);border:1px solid rgba(77,184,122,.35);color:var(--g5)}
+
+.tabs{display:flex;gap:0;margin-bottom:1.6rem;background:rgba(10,31,16,.6);border-radius:9px;padding:3px}
+.tab{flex:1;padding:.55rem;border:none;background:transparent;color:rgba(245,240,232,.45);font-family:var(--font-b);font-size:.82rem;font-weight:500;cursor:pointer;border-radius:7px;transition:all .22s}
+.tab.active{background:var(--g3);color:var(--white);box-shadow:0 2px 8px rgba(45,122,79,.45)}
+
+.btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:.7rem;padding:.82rem 1.2rem;background:var(--white);color:#1a1a1a;border:none;border-radius:11px;font-family:var(--font-b);font-size:.92rem;font-weight:500;cursor:pointer;transition:all .2s;margin-bottom:1.4rem;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.btn-google:hover{background:#f0f0f0;transform:translateY(-1px)}
+.btn-google:disabled{opacity:.55;cursor:not-allowed}
+.google-svg{width:18px;height:18px;flex-shrink:0}
+
+.divider{display:flex;align-items:center;gap:.9rem;margin-bottom:1.4rem;color:rgba(245,240,232,.28);font-size:.72rem;letter-spacing:.1em}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(77,184,122,.13)}
+
+.field{margin-bottom:1rem}
+.label{display:block;font-size:.72rem;font-weight:500;letter-spacing:.07em;color:rgba(245,240,232,.55);margin-bottom:.35rem;text-transform:uppercase}
+.input{width:100%;padding:.75rem .95rem;background:rgba(10,31,16,.7);border:1px solid rgba(77,184,122,.18);border-radius:9px;color:var(--cream);font-family:var(--font-b);font-size:.92rem;transition:all .2s;outline:none}
+.input::placeholder{color:rgba(245,240,232,.22)}
+.input:focus{border-color:var(--g4);background:rgba(10,31,16,.92);box-shadow:0 0 0 3px rgba(77,184,122,.1)}
+.forgot{display:block;text-align:right;font-size:.72rem;color:var(--g4);opacity:.8;cursor:pointer;margin-top:-.4rem;margin-bottom:.9rem;background:none;border:none;font-family:var(--font-b)}
+.forgot:hover{opacity:1;text-decoration:underline}
+
+.btn-submit{width:100%;padding:.88rem;background:linear-gradient(135deg,var(--g3),var(--g4));color:var(--white);border:none;border-radius:11px;font-family:var(--font-b);font-size:.97rem;font-weight:500;letter-spacing:.04em;cursor:pointer;transition:all .22s;margin-top:.3rem}
+.btn-submit:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(77,184,122,.38)}
+.btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.welcome{display:none;text-align:center}
+.w-avatar{width:68px;height:68px;border-radius:50%;border:2px solid var(--g4);margin:0 auto .9rem;object-fit:cover;box-shadow:0 0 18px rgba(77,184,122,.25)}
+.w-name{font-family:var(--font-d);font-size:1.35rem;font-weight:700;color:var(--white);margin-bottom:.25rem}
+.w-email{font-size:.78rem;color:rgba(245,240,232,.45);margin-bottom:.5rem}
+.w-woli{display:inline-flex;align-items:center;gap:.35rem;background:rgba(212,168,67,.13);border:1px solid rgba(212,168,67,.28);color:var(--gold2);padding:.28rem .75rem;border-radius:20px;font-family:var(--font-m);font-size:.82rem;margin-bottom:1.4rem}
+.btn-play{width:100%;padding:.95rem;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--g1);border:none;border-radius:11px;font-family:var(--font-d);font-size:1.05rem;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:all .22s;margin-bottom:.65rem}
+.btn-play:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(212,168,67,.38)}
+.btn-signout{width:100%;padding:.65rem;background:transparent;color:rgba(245,240,232,.35);border:1px solid rgba(245,240,232,.1);border-radius:9px;font-family:var(--font-b);font-size:.82rem;cursor:pointer;transition:all .2s}
+.btn-signout:hover{color:var(--red);border-color:rgba(224,84,84,.28)}
+
+.security-note{font-size:.65rem;color:rgba(245,240,232,.3);text-align:center;margin-top:.6rem;letter-spacing:.04em}
+.security-note .shield{color:var(--g4)}
+
+.footer{text-align:center;margin-top:1.4rem;font-size:.7rem;color:rgba(245,240,232,.28);letter-spacing:.04em;animation:fadeUp .7s .3s ease both}
+.footer a{color:var(--g4);text-decoration:none;opacity:.8}
+.footer a:hover{opacity:1}
+
+@media(max-width:440px){.card{padding:1.4rem}.logo-title{font-size:2rem}}
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div id="particles"></div>
+
+<div class="wrap">
+
+  <div class="logo-area">
+    <span class="logo-icon">🌿</span>
+    <div class="logo-title">WOLI <span>FARM</span></div>
+    <div class="logo-tag">Cultiva · Cosecha · Gana Tokens</div>
+  </div>
+
+  <div class="card">
+
+    <div class="msg" id="msg"></div>
+
+    <!-- Estado logueado -->
+    <div class="welcome" id="welcome">
+      <img class="w-avatar" id="w-avatar" src="" alt="">
+      <div class="w-name" id="w-name">Bienvenido</div>
+      <div class="w-email" id="w-email"></div>
+      <div class="w-woli">🪙 <span id="w-woli">0</span> WOLI guardados</div>
+      <button class="btn-play" onclick="goGame()">🌱 Ir a mi Granja</button>
+      <button class="btn-signout" onclick="doSignOut()">Cerrar sesión</button>
+    </div>
+
+    <!-- Formularios -->
+    <div id="forms">
+
+      <div class="tabs">
+        <button class="tab active" id="tab-login" onclick="switchTab('login')">Iniciar Sesión</button>
+        <button class="tab" id="tab-signup" onclick="switchTab('signup')">Crear Cuenta</button>
+      </div>
+
+      <!-- Google -->
+      <button class="btn-google" id="btn-google" onclick="doGoogle()">
+        <svg class="google-svg" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Continuar con Google
+      </button>
+
+      <div class="divider">o con correo</div>
+
+      <!-- LOGIN -->
+      <div id="form-login">
+        <div class="field">
+          <label class="label">Correo electrónico</label>
+          <input class="input" id="login-email" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email">
+        </div>
+        <div class="field">
+          <label class="label">Contraseña</label>
+          <input class="input" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="forgot" onclick="doReset()">¿Olvidaste tu contraseña?</button>
+        <button class="btn-submit" id="btn-login" onclick="doLogin()">Iniciar Sesión</button>
+      </div>
+
+      <!-- SIGNUP -->
+      <div id="form-signup" style="display:none">
+        <div class="field">
+          <label class="label">Nombre de usuario</label>
+          <input class="input" id="signup-name" type="text" placeholder="Agricultor Woli" autocomplete="username">
+        </div>
+        <div class="field">
+          <label class="label">Correo electrónico</label>
+          <input class="input" id="signup-email" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email">
+        </div>
+        <div class="field">
+          <label class="label">Contraseña</label>
+          <input class="input" id="signup-pass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSignup()">
+        </div>
+        <button class="btn-submit" id="btn-signup" onclick="doSignup()">Crear Cuenta</button>
+      </div>
+
+      <div class="security-note">
+        <span class="shield">🛡️</span> Protegido por reCAPTCHA + honeypot anti-bots
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">
+    WOLI FARM · COSTA RICA · v0.2
+  </div>
+
+</div>
+
+<!-- Honeypot field — los bots lo llenan, los humanos no lo ven -->
+<input type="text" name="website" id="hp-field" tabindex="-1" autocomplete="off"
+       style="position:absolute;left:-9999px;top:-9999px;visibility:hidden;height:0;width:0;">
+
+<script>
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// ── ANTI-BOT: timing tracker ──
+// Humanos demoran al menos 1.5s en interactuar. Bots son instantáneos.
+const _pageLoadTime = Date.now();
+let _humanInteracted = false;
+['mousemove','keydown','touchstart','scroll'].forEach(ev =>
+  document.addEventListener(ev, () => { _humanInteracted = true; }, { once: true })
+);
+
+function _isBot() {
+  const elapsed = Date.now() - _pageLoadTime;
+  const honeypot = document.getElementById('hp-field').value;
+  // Si el honeypot tiene valor → es un bot
+  if (honeypot) return 'honeypot_filled';
+  // Si pasó menos de 1.5s desde load → muy probable bot
+  if (elapsed < 1500) return 'too_fast';
+  // Si el usuario nunca movió mouse/teclado/touch → muy probable bot
+  if (!_humanInteracted) return 'no_human_interaction';
+  return null;
+}
+
+// ── PARTICLES ──
+(function(){
+  const emojis = ['🌿','🌱','🍃','💚','✨','🪙'];
+  const el = document.getElementById('particles');
+  for(let i=0;i<10;i++){
+    const p = document.createElement('div');
+    p.className='particle';
+    p.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    p.style.left  = Math.random()*100+'%';
+    p.style.bottom= Math.random()*30+'%';
+    p.style.setProperty('--dur',(6+Math.random()*8)+'s');
+    p.style.setProperty('--del',(Math.random()*10)+'s');
+    el.appendChild(p);
+  }
+})();
+
+// ── AUTH STATE ──
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    await ensureUserDoc(user);
+    const data = await loadUserData(user.uid);
+    showWelcome(user, data);
+  } else {
+    showForms();
+  }
+});
+
+// ── ENSURE USER DOC ──
+async function ensureUserDoc(user) {
+  const ref = db.collection('users').doc(user.uid);
+  const doc = await ref.get();
+  if (!doc.exists) {
+    await ref.set({
+      displayName: user.displayName || extractName(user.email),
+      email: user.email,
+      photoURL: user.photoURL || '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      coins: 80,
+      totalCyclesCompleted: 0,
+      gameState: null
+    });
+  }
+}
+
+async function loadUserData(uid) {
+  try {
+    const doc = await db.collection('users').doc(uid).get();
+    return doc.exists ? doc.data() : null;
+  } catch(e) { return null; }
+}
+
+function showWelcome(user, data) {
+  document.getElementById('forms').style.display   = 'none';
+  document.getElementById('welcome').style.display = 'block';
+  const name    = user.displayName || extractName(user.email);
+  const initials= name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const avatar  = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=1a4a28&color=6ee0a0&size=64&bold=true`;
+  document.getElementById('w-avatar').src         = avatar;
+  document.getElementById('w-name').textContent   = name;
+  document.getElementById('w-email').textContent  = user.email;
+  document.getElementById('w-woli').textContent   = data?.coins ?? 0;
+  clearMsg();
+}
+
+function showForms() {
+  document.getElementById('welcome').style.display = 'none';
+  document.getElementById('forms').style.display   = 'block';
+}
+
+function switchTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab==='login');
+  document.getElementById('tab-signup').classList.toggle('active', tab==='signup');
+  document.getElementById('form-login').style.display  = tab==='login'  ? 'block' : 'none';
+  document.getElementById('form-signup').style.display = tab==='signup' ? 'block' : 'none';
+  clearMsg();
+}
+
+// ── GOOGLE LOGIN ──
+async function doGoogle() {
+  clearMsg();
+  // Anti-bot check
+  const botReason = _isBot();
+  if (botReason) { showMsg('Verificación de seguridad falló. Esperá un momento.'); return; }
+
+  setLoading('btn-google', true, 'Conectando...');
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  try {
+    await auth.signInWithPopup(provider);
+  } catch(err) {
+    if (err.code === 'auth/popup-blocked') {
+      await auth.signInWithRedirect(provider);
+    } else if (err.code !== 'auth/popup-closed-by-user') {
+      showMsg(friendlyError(err.code));
+    }
+    setLoading('btn-google', false, '');
+  }
+}
+
+// ── EMAIL LOGIN ──
+async function doLogin() {
+  clearMsg();
+  const botReason = _isBot();
+  if (botReason) { showMsg('Verificación anti-bot falló. Recargá la página.'); return; }
+
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  if (!email || !pass) { showMsg('Completá correo y contraseña.'); return; }
+  setLoading('btn-login', true, 'Iniciando sesión...');
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch(err) {
+    showMsg(friendlyError(err.code));
+    setLoading('btn-login', false, 'Iniciar Sesión');
+  }
+}
+
+// ── SIGNUP ──
+async function doSignup() {
+  clearMsg();
+  const botReason = _isBot();
+  if (botReason) { showMsg('Verificación anti-bot falló. Esperá unos segundos e intentá de nuevo.'); return; }
+
+  const name  = document.getElementById('signup-name').value.trim() || 'Agricultor Woli';
+  const email = document.getElementById('signup-email').value.trim();
+  const pass  = document.getElementById('signup-pass').value;
+  if (!email || !pass) { showMsg('Completá correo y contraseña.'); return; }
+  if (pass.length < 6) { showMsg('La contraseña debe tener al menos 6 caracteres.'); return; }
+  setLoading('btn-signup', true, 'Creando cuenta...');
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    await cred.user.updateProfile({ displayName: name });
+    showMsg('¡Cuenta creada! Redirigiendo...', 'success');
+  } catch(err) {
+    showMsg(friendlyError(err.code));
+    setLoading('btn-signup', false, 'Crear Cuenta');
+  }
+}
+
+async function doReset() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) { showMsg('Ingresá tu correo primero.'); return; }
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showMsg('📧 Revisá tu correo para restablecer la contraseña.', 'success');
+  } catch(err) {
+    showMsg(friendlyError(err.code));
+  }
+}
+
+async function doSignOut() {
+  await auth.signOut();
+}
+
+function goGame() {
+  window.location.href = 'index.html';
+}
+
+function showMsg(text, type='error') {
+  const el = document.getElementById('msg');
+  el.textContent = text;
+  el.className   = 'msg ' + type;
+}
+function clearMsg() {
+  const el = document.getElementById('msg');
+  el.className = 'msg';
+  el.textContent = '';
+}
+function setLoading(id, loading, label) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  btn.disabled = loading;
+  if (id === 'btn-google') {
+    btn.innerHTML = loading
+      ? `<span class="spin"></span> ${label}`
+      : `<svg class="google-svg" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Continuar con Google`;
+  } else {
+    btn.innerHTML = loading ? `<span class="spin"></span> ${label}` : label;
+  }
+}
+
+function extractName(email) {
+  if (!email) return 'Agricultor';
+  return email.split('@')[0].replace(/[._-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+}
+
+function friendlyError(code) {
+  const map = {
+    'auth/configuration-not-found':'⚠️ Falta agregar este dominio en Firebase Authentication → Settings → Authorized domains.',
+    'auth/user-not-found':         'No hay cuenta con ese correo.',
+    'auth/wrong-password':         'Contraseña incorrecta.',
+    'auth/invalid-credential':     'Correo o contraseña incorrectos.',
+    'auth/email-already-in-use':   'Ya existe una cuenta con ese correo.',
+    'auth/weak-password':          'La contraseña debe tener al menos 6 caracteres.',
+    'auth/invalid-email':          'El correo ingresado no es válido.',
+    'auth/too-many-requests':      'Demasiados intentos. Esperá unos minutos.',
+    'auth/network-request-failed': 'Sin conexión. Revisá tu internet.',
+    'auth/popup-closed-by-user':   'Cerraste el popup. Intentá de nuevo.',
+  };
+  return map[code] || `Error: ${code}`;
+}
+</script>
+
+</body>
+</html>
