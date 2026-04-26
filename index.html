@@ -55,6 +55,9 @@
   </div>
   <div class="header-right">
     <div id="user-badge-slot"></div>
+    <a href="collection.html" id="collection-btn" title="Mi Colección" style="display:flex;align-items:center;gap:5px;padding:5px 11px;margin-right:8px;background:rgba(200,168,75,0.13);border:1px solid rgba(200,168,75,0.3);border-radius:20px;text-decoration:none;font-size:.72rem;color:#f0d080;font-family:'DM Sans',sans-serif;">
+      🌸 Colección
+    </a>
     <div class="wallet">
       <span class="wallet-icon">🪙</span>
       <span class="wallet-val" id="wallet-display">0</span>
@@ -223,7 +226,7 @@
     <div class="harvest-nft-hint">Este ciclo generaría un NFT con rareza <strong id="h-nft-rarity">—</strong> en la blockchain.</div>
     <div class="harvest-actions">
       <button class="hbtn hbtn-new" onclick="Farm.newCycle()">🌱 Nueva Semilla</button>
-      <button class="hbtn hbtn-shop" onclick="UI.openShopFromHarvest()">🛒 Tienda</button>
+      <button class="hbtn hbtn-shop" onclick="window.location.href='collection.html'">🌸 Mi Colección</button>
     </div>
   </div>
 </div>

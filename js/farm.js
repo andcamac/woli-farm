@@ -123,6 +123,12 @@ const Farm = (() => {
       S.cycleActive = false;
       saveState(S);
       spawnHarvestBurst();
+
+      // Save harvest snapshot to Firestore (collection placeholder for NFT)
+      saveHarvestSnapshot(S, bonus, rarity).catch(e =>
+        console.warn('Harvest save failed:', e.message)
+      );
+
       setTimeout(() => UI.showHarvest(S, bonus, rarity), 1200);
       UI.log(S, `🌸 ¡COSECHA! +${bonus} WOLI — Rareza: ${rarity.label}`, 'harvest');
       return;
@@ -135,6 +141,54 @@ const Farm = (() => {
     saveState(S);
     UI.render(S);
   }
+
+  // ── Save harvest snapshot to Firestore (NFT placeholder) ──
+  async function saveHarvestSnapshot(state, bonus, rarity) {
+    if (typeof firebase === 'undefined') return;
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      console.warn('No user logged in, harvest not saved to cloud');
+      return;
+    }
+
+    const db = firebase.firestore();
+
+    // Get next token ID by counting existing harvests
+    const harvestsRef = db.collection('users').doc(user.uid).collection('harvests');
+    const snapshot = await harvestsRef.get();
+    const tokenId = snapshot.size + 1;
+
+    const harvestDoc = {
+      tokenId:       tokenId,
+      ownerUid:      user.uid,
+      ownerName:     user.displayName || user.email.split('@')[0],
+      harvestedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+      // Plant metadata (NFT attributes placeholder)
+      stageIdx:      7,                    // always full bloom at harvest
+      health:        Math.round(state.health),
+      perfectDays:   state.perfectDays,
+      maxStreak:     state.maxStreak,
+      coinsEarned:   state.coinsEarned,
+      harvestBonus:  bonus,
+      // Rarity
+      rarityLabel:   rarity.label,
+      rarityColor:   rarity.color,
+      rarityPct:     rarity.pct,
+      // Visibility (default private)
+      isPublic:      false,
+      // Mint status (for future Sepolia integration)
+      minted:        false,
+      mintTxHash:    null,
+      mintedAt:      null,
+      // Cycle history
+      dayHistory:    state.dayHistory || [],
+      cycleStartTime: state.cycleStartTime
+    };
+
+    await harvestsRef.add(harvestDoc);
+    console.log(`✅ Harvest #${tokenId} saved to collection`);
+  }
+
 
   // ── New cycle ──────────────────────────────
   function newCycle() {

@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Usuarios — solo el propio usuario lee/escribe su doc
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false;
+
+      // Subcolección harvests (cosechas / NFTs placeholder)
+      match /harvests/{harvestId} {
+        // El dueño puede leer todas sus cosechas
+        // Cualquier usuario logueado puede leer cosechas marcadas como públicas
+        allow read: if request.auth != null && (
+          request.auth.uid == userId ||
+          resource.data.isPublic == true
+        );
+        // Solo el dueño puede crear/actualizar (no borrar — son permanentes como NFTs)
+        allow create, update: if request.auth != null && request.auth.uid == userId;
+        allow delete: if false;
+      }
+    }
+
+    // Bloquear todo lo demás
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

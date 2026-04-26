@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Woli Farm — Mi Colección</title>
+<meta name="theme-color" content="#0a1f10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK (en HEAD, sincrónico) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+
+<!-- Plant rendering -->
+<script src="js/config.js"></script>
+<script src="js/plant.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g1:#0a1f10;--g2:#1a4a2e;--g3:#2d7a4f;--g4:#4caf78;--g5:#8fd4a8;
+  --gold:#c8a84b;--gold2:#f0d080;--cream:#f5f0e8;
+  --red:#e05454;--blue:#60a0f0;--purple:#c080f0;--white:#fff;
+  --font-d:'Playfair Display',serif;
+  --font-b:'DM Sans',sans-serif;
+  --font-m:'DM Mono',monospace;
+}
+html,body{min-height:100%;font-family:var(--font-b);background:var(--g1);color:var(--cream)}
+
+/* Header */
+header{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 1.5rem;background:rgba(10,31,16,.95);border-bottom:1px solid rgba(77,184,122,.15);position:sticky;top:0;z-index:50;backdrop-filter:blur(8px)}
+.brand{display:flex;flex-direction:column}
+.brand-title{font-family:var(--font-d);font-size:1.4rem;font-weight:900;color:var(--cream);letter-spacing:.04em}
+.brand-title span{color:var(--g4)}
+.brand-sub{font-family:var(--font-m);font-size:.62rem;color:var(--g4);opacity:.7;letter-spacing:.18em;margin-top:.2rem}
+.header-right{display:flex;align-items:center;gap:8px}
+.btn-back{display:flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(77,184,122,0.12);border:1px solid rgba(77,184,122,0.3);border-radius:20px;color:var(--g5);font-size:.78rem;text-decoration:none;font-family:var(--font-b);transition:all .2s}
+.btn-back:hover{background:rgba(77,184,122,0.2);transform:translateX(-2px)}
+
+/* Hero */
+.hero{padding:2rem 1.5rem 1rem;text-align:center;max-width:780px;margin:0 auto}
+.hero-title{font-family:var(--font-d);font-size:2.2rem;font-weight:900;color:var(--cream);line-height:1.1;margin-bottom:.4rem}
+.hero-title span{color:var(--g4)}
+.hero-sub{font-size:.92rem;color:rgba(245,240,232,.55);max-width:540px;margin:0 auto;line-height:1.55}
+
+/* Stats bar */
+.stats-bar{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;padding:1.4rem 1rem;max-width:780px;margin:0 auto}
+.stat-pill{padding:.55rem 1.1rem;background:rgba(10,31,16,.6);border:1px solid rgba(77,184,122,.15);border-radius:20px;font-family:var(--font-m);font-size:.78rem;color:rgba(245,240,232,.7)}
+.stat-pill strong{color:var(--g5);margin-right:5px}
+
+/* Filters */
+.filters{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;padding:0 1.5rem 1.5rem;max-width:780px;margin:0 auto}
+.filter-btn{padding:8px 16px;background:rgba(15,45,24,.6);border:1px solid rgba(77,184,122,.2);border-radius:20px;color:rgba(245,240,232,.55);font-size:.76rem;cursor:pointer;font-family:var(--font-b);transition:all .2s}
+.filter-btn:hover{border-color:rgba(77,184,122,.4);color:var(--cream)}
+.filter-btn.active{background:var(--g3);color:var(--white);border-color:var(--g4);box-shadow:0 2px 8px rgba(77,184,122,.3)}
+.sort-select{padding:8px 14px;background:rgba(15,45,24,.6);border:1px solid rgba(77,184,122,.2);border-radius:20px;color:rgba(245,240,232,.7);font-size:.76rem;font-family:var(--font-b);cursor:pointer;outline:none}
+.sort-select option{background:#0a1f10}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;padding:0 1.5rem 3rem;max-width:1100px;margin:0 auto}
+
+/* Card */
+.card{background:linear-gradient(165deg,rgba(15,45,24,.85) 0%,rgba(10,31,16,.95) 100%);border:1px solid rgba(77,184,122,.18);border-radius:14px;overflow:hidden;transition:all .25s;position:relative}
+.card:hover{transform:translateY(-3px);border-color:rgba(77,184,122,.45);box-shadow:0 12px 30px rgba(0,0,0,.4)}
+
+.card-img{aspect-ratio:1/1.45;background:linear-gradient(180deg,#1a3a5c 0%,#2d5a3a 60%,#3d2a14 100%);position:relative;overflow:hidden}
+.card-img svg{position:absolute;inset:0;width:100%;height:100%}
+
+.token-badge{position:absolute;top:10px;left:10px;padding:3px 8px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.2);border-radius:12px;font-family:var(--font-m);font-size:.66rem;color:var(--cream);letter-spacing:.07em;backdrop-filter:blur(4px)}
+
+.rarity-badge{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:12px;font-family:var(--font-m);font-size:.62rem;font-weight:600;letter-spacing:.05em;backdrop-filter:blur(4px)}
+
+.visibility-toggle{position:absolute;bottom:10px;right:10px;width:30px;height:30px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;backdrop-filter:blur(4px);transition:all .2s}
+.visibility-toggle:hover{background:rgba(0,0,0,.75);transform:scale(1.08)}
+
+.card-body{padding:14px}
+.card-title{font-family:var(--font-d);font-size:1.05rem;font-weight:700;color:var(--cream);margin-bottom:8px}
+.card-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-bottom:12px}
+.stat-row{display:flex;justify-content:space-between;font-size:.7rem}
+.stat-label{color:rgba(245,240,232,.45)}
+.stat-value{color:var(--g5);font-family:var(--font-m);font-weight:500}
+.stat-value.gold{color:var(--gold2)}
+
+.card-date{font-family:var(--font-m);font-size:.66rem;color:rgba(245,240,232,.35);margin-bottom:10px;letter-spacing:.04em}
+
+.btn-mint{width:100%;padding:8px;background:linear-gradient(135deg,rgba(77,184,122,.15),rgba(77,184,122,.08));color:rgba(143,212,168,.5);border:1px solid rgba(77,184,122,.2);border-radius:8px;font-family:var(--font-m);font-size:.7rem;cursor:not-allowed;letter-spacing:.04em;position:relative}
+.btn-mint::after{content:'Sepolia testnet — Coming soon';display:block;font-size:.6rem;opacity:.6;margin-top:2px}
+
+/* Empty state */
+.empty{text-align:center;padding:4rem 1.5rem;max-width:480px;margin:0 auto}
+.empty-icon{font-size:3.5rem;margin-bottom:1rem;opacity:.4;filter:grayscale(.5)}
+.empty-title{font-family:var(--font-d);font-size:1.4rem;color:var(--cream);margin-bottom:.6rem}
+.empty-text{font-size:.88rem;color:rgba(245,240,232,.5);line-height:1.6;margin-bottom:1.6rem}
+.btn-plant{display:inline-block;padding:.85rem 2rem;background:linear-gradient(135deg,var(--g3),var(--g4));color:var(--white);border:none;border-radius:11px;font-family:var(--font-b);font-size:.95rem;font-weight:500;text-decoration:none;cursor:pointer;transition:all .2s}
+.btn-plant:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(77,184,122,.4)}
+
+/* Loading */
+.loading{display:flex;align-items:center;justify-content:center;padding:4rem 1.5rem;color:rgba(245,240,232,.5);font-size:.85rem}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(143,212,168,.3);border-top-color:var(--g4);border-radius:50%;animation:spin .8s linear infinite;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Login required */
+.login-required{text-align:center;padding:3.5rem 1.5rem;max-width:420px;margin:0 auto}
+.login-required-icon{font-size:3rem;margin-bottom:1rem}
+.login-required h2{font-family:var(--font-d);font-size:1.4rem;color:var(--cream);margin-bottom:.5rem}
+.login-required p{font-size:.85rem;color:rgba(245,240,232,.55);margin-bottom:1.5rem;line-height:1.55}
+
+/* Toast */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(15,45,24,.95);border:1px solid rgba(77,184,122,.4);color:var(--g5);padding:.7rem 1.4rem;border-radius:100px;font-size:.8rem;font-family:var(--font-m);opacity:0;transition:all .3s;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.4);pointer-events:none;backdrop-filter:blur(6px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Responsive */
+@media(max-width:560px){
+  .grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:0 1rem 2rem}
+  .hero-title{font-size:1.7rem}
+  .hero{padding:1.4rem 1rem .5rem}
+  .stats-bar{padding:1rem .5rem;gap:8px}
+  .stat-pill{padding:.4rem .8rem;font-size:.72rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-title">WOLI <span>FARM</span></div>
+    <div class="brand-sub">MI COLECCIÓN</div>
+  </div>
+  <div class="header-right">
+    <a href="index.html" class="btn-back">← Volver al juego</a>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-title">Mi <span>Colección</span></div>
+  <div class="hero-sub">Cada cosecha es un placeholder de NFT único. Cuando lancemos en Sepolia, podrás mintearlas como ERC-721 reales en tu wallet.</div>
+</div>
+
+<div id="content"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let _harvests = [];
+let _currentFilter = 'all';
+let _currentSort = 'date_desc';
+let _viewMode = 'private'; // 'private' = my collection, 'public' = explore
+
+// ── AUTH STATE ──
+auth.onAuthStateChanged(async (user) => {
+  const content = document.getElementById('content');
+
+  if (!user) {
+    content.innerHTML = `
+      <div class="login-required">
+        <div class="login-required-icon">🔒</div>
+        <h2>Necesitás iniciar sesión</h2>
+        <p>Para ver tu colección de cosechas, primero iniciá sesión.</p>
+        <a href="auth.html" class="btn-plant">Iniciar Sesión</a>
+      </div>`;
+    return;
+  }
+
+  // Show loading
+  content.innerHTML = `<div class="loading"><span class="spin"></span> Cargando tu colección...</div>`;
+
+  try {
+    await loadHarvests(user.uid);
+    renderPage();
+  } catch (e) {
+    console.error(e);
+    content.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">⚠️</div>
+        <div class="empty-title">Error al cargar</div>
+        <div class="empty-text">${e.message}</div>
+      </div>`;
+  }
+});
+
+// ── LOAD HARVESTS ──
+async function loadHarvests(uid) {
+  const snapshot = await db.collection('users').doc(uid).collection('harvests')
+    .orderBy('harvestedAt', 'desc')
+    .get();
+
+  _harvests = snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+}
+
+async function loadPublicHarvests() {
+  // Read public harvests across all users (collectionGroup query)
+  const snapshot = await db.collectionGroup('harvests')
+    .where('isPublic', '==', true)
+    .orderBy('harvestedAt', 'desc')
+    .limit(60)
+    .get();
+
+  _harvests = snapshot.docs.map(doc => ({
+    id: doc.id,
+    parentUid: doc.ref.parent.parent.id,
+    ...doc.data()
+  }));
+}
+
+// ── RENDER ──
+function renderPage() {
+  const content = document.getElementById('content');
+
+  // Filter and sort
+  let filtered = _harvests;
+  if (_currentFilter !== 'all') {
+    filtered = filtered.filter(h => h.rarityLabel && h.rarityLabel.toLowerCase().includes(_currentFilter.toLowerCase()));
+  }
+
+  filtered = [...filtered].sort((a, b) => {
+    if (_currentSort === 'date_desc') {
+      return (b.harvestedAt?.toMillis?.() || 0) - (a.harvestedAt?.toMillis?.() || 0);
+    } else if (_currentSort === 'date_asc') {
+      return (a.harvestedAt?.toMillis?.() || 0) - (b.harvestedAt?.toMillis?.() || 0);
+    } else if (_currentSort === 'rarity_desc') {
+      return (b.rarityPct || 0) - (a.rarityPct || 0);
+    } else if (_currentSort === 'rarity_asc') {
+      return (a.rarityPct || 0) - (b.rarityPct || 0);
+    } else if (_currentSort === 'token_asc') {
+      return (a.tokenId || 0) - (b.tokenId || 0);
+    } else if (_currentSort === 'token_desc') {
+      return (b.tokenId || 0) - (a.tokenId || 0);
+    }
+    return 0;
+  });
+
+  // Stats summary
+  const total = _harvests.length;
+  const totalCoins = _harvests.reduce((sum, h) => sum + (h.coinsEarned || 0), 0);
+  const legendary = _harvests.filter(h => (h.rarityLabel || '').includes('Legendaria')).length;
+  const epic = _harvests.filter(h => (h.rarityLabel || '').includes('Épica')).length;
+
+  let html = `
+    <div class="stats-bar">
+      <div class="stat-pill">📊 <strong>${total}</strong> cosechas</div>
+      <div class="stat-pill">🪙 <strong>${totalCoins.toLocaleString()}</strong> WOLI ganados</div>
+      <div class="stat-pill">💎 <strong>${legendary}</strong> Legendarias</div>
+      <div class="stat-pill">🔮 <strong>${epic}</strong> Épicas</div>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn ${_viewMode==='private'?'active':''}" onclick="switchView('private')">🔒 Mi Colección</button>
+      <button class="filter-btn ${_viewMode==='public'?'active':''}" onclick="switchView('public')">🌍 Explorar Pública</button>
+    </div>
+
+    <div class="filters" style="padding-top:0">
+      <button class="filter-btn ${_currentFilter==='all'?'active':''}" onclick="setFilter('all')">Todas</button>
+      <button class="filter-btn ${_currentFilter==='legendaria'?'active':''}" onclick="setFilter('legendaria')">💎 Legendaria</button>
+      <button class="filter-btn ${_currentFilter==='épica'?'active':''}" onclick="setFilter('épica')">🔮 Épica</button>
+      <button class="filter-btn ${_currentFilter==='rara'?'active':''}" onclick="setFilter('rara')">💙 Rara</button>
+      <button class="filter-btn ${_currentFilter==='común'?'active':''}" onclick="setFilter('común')">🟢 Común</button>
+      <button class="filter-btn ${_currentFilter==='básica'?'active':''}" onclick="setFilter('básica')">⚪ Básica</button>
+      <select class="sort-select" onchange="setSort(this.value)">
+        <option value="date_desc" ${_currentSort==='date_desc'?'selected':''}>📅 Más recientes</option>
+        <option value="date_asc" ${_currentSort==='date_asc'?'selected':''}>📅 Más antiguas</option>
+        <option value="rarity_desc" ${_currentSort==='rarity_desc'?'selected':''}>💎 Más raras primero</option>
+        <option value="rarity_asc" ${_currentSort==='rarity_asc'?'selected':''}>⚪ Menos raras primero</option>
+        <option value="token_asc" ${_currentSort==='token_asc'?'selected':''}>#️⃣ Token ID asc</option>
+        <option value="token_desc" ${_currentSort==='token_desc'?'selected':''}>#️⃣ Token ID desc</option>
+      </select>
+    </div>
+  `;
+
+  if (filtered.length === 0) {
+    if (total === 0 && _viewMode === 'private') {
+      html += `
+        <div class="empty">
+          <div class="empty-icon">🌱</div>
+          <div class="empty-title">Tu colección está vacía</div>
+          <div class="empty-text">Completá un ciclo de 7 días en Woli Farm para que tu primera cosecha aparezca aquí como NFT placeholder.</div>
+          <a href="index.html" class="btn-plant">🌿 Ir a Plantar</a>
+        </div>`;
+    } else {
+      html += `
+        <div class="empty">
+          <div class="empty-icon">🔍</div>
+          <div class="empty-title">Sin resultados</div>
+          <div class="empty-text">No hay cosechas que coincidan con este filtro.</div>
+        </div>`;
+    }
+  } else {
+    html += `<div class="grid">`;
+    filtered.forEach(h => {
+      html += renderCard(h);
+    });
+    html += `</div>`;
+  }
+
+  content.innerHTML = html;
+
+  // Render plant SVGs after innerHTML insertion
+  filtered.forEach(h => {
+    const svgEl = document.getElementById(`plant-${h.id}`);
+    if (svgEl) {
+      drawPlantInto(svgEl, 7, h.health || 100);
+    }
+  });
+}
+
+// ── DRAW PLANT (uses plant.js _lp/_cl/_bud helpers) ──
+function drawPlantInto(svgEl, stageIdx, healthPct) {
+  const hp = healthPct / 100;
+  let g, d, s;
+  if (hp > 0.75) { g='#4caf78'; d='#2d7a4f'; s='#3a8d5a'; }
+  else if (hp > 0.5) { g='#8fc840'; d='#4a6a10'; s='#5a7a20'; }
+  else if (hp > 0.25) { g='#c8a840'; d='#8a6010'; s='#9a7020'; }
+  else { g='#c86040'; d='#6a2010'; s='#8a3020'; }
+  const GOLD = '#c8a84b';
+
+  // Use full bloom (stage 7)
+  const inner = `
+    <line x1="100" y1="265" x2="100" y2="143" stroke="${s}" stroke-width="6" stroke-linecap="round"/>
+    <line x1="100" y1="248" x2="68" y2="216" stroke="${s}" stroke-width="4" stroke-linecap="round"/>
+    <line x1="100" y1="248" x2="132" y2="216" stroke="${s}" stroke-width="4" stroke-linecap="round"/>
+    <line x1="100" y1="208" x2="62" y2="180" stroke="${s}" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="100" y1="208" x2="138" y2="180" stroke="${s}" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="100" y1="172" x2="72" y2="156" stroke="${s}" stroke-width="3" stroke-linecap="round"/>
+    <line x1="100" y1="172" x2="128" y2="156" stroke="${s}" stroke-width="3" stroke-linecap="round"/>
+    ${_cl(66,214,40,d,d,-22)}${_cl(134,214,40,d,d,22)}
+    ${_cl(60,178,38,g,d,-32)}${_cl(140,178,38,g,d,32)}
+    ${_cl(70,154,34,g,d,-12)}${_cl(130,154,34,g,d,12)}
+    ${_bud(100,143,g,d,GOLD,true)}
+  `;
+
+  // Pot + soil + plant
+  svgEl.setAttribute('viewBox', '0 0 200 320');
+  svgEl.innerHTML = `
+    <rect x="0" y="265" width="200" height="55" fill="#3d2a14"/>
+    <polygon points="62,285 138,285 130,320 70,320" fill="#6B3410"/>
+    <rect x="60" y="280" width="80" height="8" fill="#a0521a"/>
+    ${inner}
+  `;
+}
+
+// ── RENDER CARD ──
+function renderCard(h) {
+  const date = h.harvestedAt?.toDate?.()?.toLocaleDateString('es-CR', {year:'numeric',month:'short',day:'numeric'}) || '—';
+  const rarityColor = h.rarityColor || '#888';
+  const rarityLabel = h.rarityLabel || '⚪ Básica';
+  const tokenId = String(h.tokenId || 0).padStart(4, '0');
+  const isMine = _viewMode === 'private';
+  const isPublic = h.isPublic;
+
+  return `
+    <div class="card">
+      <div class="card-img">
+        <svg id="plant-${h.id}" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="token-badge">#${tokenId}</div>
+        <div class="rarity-badge" style="background:${rarityColor}33;border:1px solid ${rarityColor};color:${rarityColor};">${rarityLabel}</div>
+        ${isMine ? `
+          <div class="visibility-toggle" onclick="toggleVisibility('${h.id}', ${isPublic})" title="${isPublic ? 'Pública (clic para hacer privada)' : 'Privada (clic para hacer pública)'}">
+            ${isPublic ? '🌍' : '🔒'}
+          </div>
+        ` : ''}
+      </div>
+      <div class="card-body">
+        <div class="card-title">Cosecha #${tokenId}</div>
+        <div class="card-stats">
+          <div class="stat-row"><span class="stat-label">Salud</span><span class="stat-value">${h.health}%</span></div>
+          <div class="stat-row"><span class="stat-label">Racha</span><span class="stat-value">${h.maxStreak || 0}</span></div>
+          <div class="stat-row"><span class="stat-label">Días ⭐</span><span class="stat-value">${h.perfectDays || 0}/7</span></div>
+          <div class="stat-row"><span class="stat-label">WOLI</span><span class="stat-value gold">+${h.coinsEarned || 0}</span></div>
+        </div>
+        <div class="card-date">📅 ${date}${!isMine ? ` · 👤 ${h.ownerName || 'Anon'}` : ''}</div>
+        <button class="btn-mint" disabled title="Mint to Sepolia testnet (Coming soon)">🔗 Mint as NFT</button>
+      </div>
+    </div>
+  `;
+}
+
+// ── ACTIONS ──
+function setFilter(filter) {
+  _currentFilter = filter;
+  renderPage();
+}
+
+function setSort(sort) {
+  _currentSort = sort;
+  renderPage();
+}
+
+async function switchView(mode) {
+  _viewMode = mode;
+  const content = document.getElementById('content');
+  content.innerHTML = `<div class="loading"><span class="spin"></span> Cargando...</div>`;
+  try {
+    if (mode === 'private') {
+      const user = auth.currentUser;
+      if (user) await loadHarvests(user.uid);
+    } else {
+      await loadPublicHarvests();
+    }
+    renderPage();
+  } catch (e) {
+    showToast('Error: ' + e.message);
+    console.error(e);
+  }
+}
+
+async function toggleVisibility(harvestId, currentlyPublic) {
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    await db.collection('users').doc(user.uid).collection('harvests').doc(harvestId)
+      .update({ isPublic: !currentlyPublic });
+    // Update local state
+    const h = _harvests.find(x => x.id === harvestId);
+    if (h) h.isPublic = !currentlyPublic;
+    showToast(!currentlyPublic ? '🌍 Cosecha pública' : '🔒 Cosecha privada');
+    renderPage();
+  } catch (e) {
+    showToast('Error: ' + e.message);
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+
+</body>
+</html>
