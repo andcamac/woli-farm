@@ -36,6 +36,11 @@ const Clock = (() => {
     state.dayPerfect  = false;
     state.todayOnTime = { w: [false,false,false], f: [false] };
 
+    // Limpiar el estado de notificaciones (nuevo día, tareas frescas)
+    if (window.Notifications && Notifications.resetDailyState) {
+      Notifications.resetDailyState();
+    }
+
     const tasks = [];
 
     // Schedule 3 water tasks at each window hour + random offset (0–30 min)
@@ -113,15 +118,19 @@ const Clock = (() => {
 
     // ── Process task notifications & expiry ──
     _state.tasks.forEach(task => {
-      if (task.status === 'pending' && mins >= task.fireMin && !task.notified) {
+      // Solo disparar si está pending Y aún no se notificó Y estamos dentro de la ventana
+      if (task.status === 'pending' && !task.notified && mins >= task.fireMin && mins < task.expiryMin) {
         task.notified = true;
         task.status   = 'notified';
         Notifications.fire(task);
       }
-      if (task.status === 'notified' && mins >= task.expiryMin) {
+      // Expirar tareas pasadas la ventana
+      if ((task.status === 'notified' || task.status === 'pending') && mins >= task.expiryMin) {
+        if (task.status === 'notified') {
+          Notifications.dismiss(task.id);
+          _handleMissedTask(task);
+        }
         task.status = 'missed';
-        Notifications.dismiss(task.id);
-        _handleMissedTask(task);
       }
     });
 
@@ -142,6 +151,21 @@ const Clock = (() => {
     _onTick = onTick;
     _onDay  = onDay;
     generateDayTasks(state);
+
+    // Para tareas ya notificadas en sesiones anteriores, marcarlas en el set
+    // para que NO se vuelvan a disparar (silenciosamente al recargar)
+    if (state.tasks) {
+      state.tasks.forEach(task => {
+        if (task.notified && task.status === 'notified') {
+          // La tarea ya fue notificada antes pero sigue activa
+          // No la mostramos de nuevo, el usuario ya la vio
+          if (window.Notifications && Notifications._markFired) {
+            Notifications._markFired(task.id);
+          }
+        }
+      });
+    }
+
     if (_ticker) clearInterval(_ticker);
     _ticker = setInterval(tick, 1000);
     tick(); // immediate first tick

@@ -1,16 +1,22 @@
 /* ═══════════════════════════════════════════
    NOTIFICATIONS — In-App Alert System
    Woli Farm · Web3 Demo
+   v2: Fix de notificaciones repetidas
 ═══════════════════════════════════════════ */
 
 'use strict';
 
 const Notifications = (() => {
 
-  const active = {};  // id → { el, timer }
+  const active = {};        // id → { countdown }
+  const _firedThisSession = new Set();  // task IDs ya disparadas en esta sesión
 
   // ── Fire a task notification ───────────────
   function fire(task) {
+    // Evitar disparar la misma tarea dos veces en la misma sesión
+    if (_firedThisSession.has(task.id)) return;
+    _firedThisSession.add(task.id);
+
     const isWater = task.type === 'water';
     const icon    = isWater ? '💧' : '🌿';
     const titles  = {
@@ -28,13 +34,20 @@ const Notifications = (() => {
 
     showNotif(task.id, icon, title, sub, mins);
 
-    // Try browser Push notification as well
+    // Try browser Push notification as well (solo una vez por tarea)
     _tryPush(icon + ' ' + title, sub);
   }
 
   // ── Show the in-app notification bar ──────
   function showNotif(id, icon, title, sub, windowMins) {
+    // Si ya hay un countdown activo para esta tarea, NO crear otro
+    if (active[id] && active[id].countdown) {
+      return;
+    }
+
     const el = document.getElementById('notif');
+    if (!el) return;
+
     document.getElementById('notif-icon').textContent  = icon;
     document.getElementById('notif-title').textContent = title;
     document.getElementById('notif-sub').textContent   = sub;
@@ -55,7 +68,7 @@ const Notifications = (() => {
       }
     }, 1000);
 
-    active[id] = { el, countdown };
+    active[id] = { countdown };
 
     // Pulse the action buttons
     _pulseButtons(id.startsWith('water') ? 'btn-water' : 'btn-fert');
@@ -78,6 +91,13 @@ const Notifications = (() => {
     Object.keys(active).forEach(id => dismiss(id));
   }
 
+  // ── Reset cuando empieza un nuevo día ──────
+  // Llamar desde clock.js cuando regenera tareas del día
+  function resetDailyState() {
+    _firedThisSession.clear();
+    dismissAll();
+  }
+
   // ── Pulse button hint ─────────────────────
   function _pulseButtons(btnId) {
     const btn = document.getElementById(btnId);
@@ -97,9 +117,17 @@ const Notifications = (() => {
     if (!('Notification' in window)) return;
     if (Notification.permission !== 'granted') return;
     try {
-      new Notification(title, { body, icon: '🌿', badge: '🌿' });
-    } catch(e) {}
+      new Notification(title, {
+        body,
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
+        tag: 'woli-farm-' + Date.now(), // tag único para que no se reemplace
+        requireInteraction: false
+      });
+    } catch(e) { /* silent */ }
   }
 
-  return { fire, dismiss, dismissAll, requestPermission };
+  return { fire, dismiss, dismissAll, requestPermission, resetDailyState,
+           // Internal: marca una task como ya disparada (sin mostrar UI)
+           _markFired: (id) => _firedThisSession.add(id) };
 })();
