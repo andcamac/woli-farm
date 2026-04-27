@@ -43,62 +43,8 @@
   });
 })();
 </script>
-<!-- ════════════════════════════════════════════════════════
-     Google Translate Widget — Multilingual support (15+ idiomas)
-     ════════════════════════════════════════════════════════ -->
-<style>
-.skiptranslate, .goog-te-banner-frame { display: none !important; }
-body { top: 0 !important; }
-.goog-te-gadget { font-size: 0 !important; color: transparent !important; }
-.goog-te-gadget .goog-te-combo {
-  margin: 0 !important;
-  padding: 5px 10px !important;
-  background: rgba(15, 45, 24, 0.85) !important;
-  color: #f5f0e8 !important;
-  border: 1px solid rgba(77, 184, 122, 0.3) !important;
-  border-radius: 18px !important;
-  font-family: 'DM Sans', sans-serif !important;
-  font-size: 0.7rem !important;
-  cursor: pointer !important;
-  outline: none !important;
-  max-width: 110px;
-}
-.goog-te-gadget .goog-te-combo option {
-  background: #0a1f10 !important;
-  color: #f5f0e8 !important;
-}
-.goog-logo-link, .goog-te-gadget > span > a, .goog-te-gadget > span { display: none !important; }
-.goog-te-gadget::before { content: '🌐 '; color: #4caf78; font-size: 0.8rem; }
-.goog-tooltip, .goog-tooltip:hover { display: none !important; }
-.goog-text-highlight { background-color: transparent !important; border: none !important; box-shadow: none !important; }
-#google_translate_element {
-  position: fixed !important;
-  top: 14px !important;
-  right: 14px !important;
-  z-index: 999999 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  visibility: visible !important;
-}
-</style>
 </head>
 <body>
-
-<!-- ═══════════════════════════════════════════════════════
-     Google Translate Widget — fixed top-right, siempre visible
-     ═══════════════════════════════════════════════════════ -->
-<div id="google_translate_element"></div>
-<script type="text/javascript">
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement({
-    pageLanguage: 'es',
-    includedLanguages: 'en,es,de,tl,zh-CN,zh-TW,pt,fr,it,ja,ko,ru,ar,hi',
-    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-    autoDisplay: false
-  }, 'google_translate_element');
-}
-</script>
-<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 
 <!-- ── HEADER ── -->
 <header id="header">
@@ -326,6 +272,9 @@ firebase.auth().onAuthStateChanged(function(user){
     '</a>';
 });
 </script>
+
+<!-- Custom Language Selector (loads Google Translate internally) -->
+<script src="js/lang-selector.js"></script>
 
 </body>
 </html>

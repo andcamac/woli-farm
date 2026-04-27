@@ -3,17 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Woli Farm — Inicia Sesión</title>
+<title>Woli Farm — Cultiva, Cosecha, Gana Tokens</title>
+<meta name="description" content="Juego Web3 de cultivo de cáñamo en tiempo real. 7 días de cuidado real, gana WOLI tokens y NFTs únicos por cada cosecha.">
 <meta name="theme-color" content="#0a1f10">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-<!-- Firebase SDK (en HEAD, sincrónico) -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-
-<!-- Firebase Config -->
 <script src="js/firebase-config.js"></script>
 
 <style>
@@ -28,33 +27,61 @@
 }
 html,body{min-height:100%;font-family:var(--font-b);background:var(--g1);color:var(--cream);overflow-x:hidden}
 
-.bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 50% 0%,#1a4a28 0%,#0a1f10 60%)}
-.particle{position:fixed;font-size:1.1rem;opacity:0;pointer-events:none;z-index:0;animation:floatUp var(--dur,8s) var(--del,0s) ease-in-out infinite}
-@keyframes floatUp{0%{opacity:0;transform:translateY(0) rotate(0deg)}20%{opacity:.5}80%{opacity:.2}100%{opacity:0;transform:translateY(-100px) rotate(15deg)}}
+/* ── BG ── */
+.bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 30% 0%,#1a4a28 0%,#0a1f10 60%)}
+.bg::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 80%,rgba(200,168,75,0.08) 0%,transparent 50%)}
+.particle{position:fixed;font-size:1.1rem;opacity:0;pointer-events:none;z-index:0;
+  animation:floatUp var(--dur,10s) var(--del,0s) ease-in-out infinite}
+@keyframes floatUp{0%{opacity:0;transform:translateY(0) rotate(0deg)}20%{opacity:.4}80%{opacity:.15}100%{opacity:0;transform:translateY(-120px) rotate(15deg)}}
 
-.wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem}
+/* ── LAYOUT ── */
+.wrap{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
+.container{display:grid;grid-template-columns:1fr 1fr;gap:3rem;max-width:1100px;width:100%;align-items:center}
 
-.logo-area{text-align:center;margin-bottom:1.8rem;animation:fadeDown .7s ease both}
-@keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
-.logo-icon{font-size:3rem;display:block;filter:drop-shadow(0 0 18px var(--g4));animation:glow 3s ease-in-out infinite}
-@keyframes glow{0%,100%{filter:drop-shadow(0 0 12px var(--g4))}50%{filter:drop-shadow(0 0 28px var(--g5))}}
-.logo-title{font-family:var(--font-d);font-size:2.6rem;font-weight:900;letter-spacing:.1em;color:var(--white);line-height:1;margin-top:.4rem}
-.logo-title span{color:var(--g4)}
-.logo-tag{font-family:var(--font-m);font-size:.6rem;letter-spacing:.22em;color:var(--g4);opacity:.8;margin-top:.4rem;text-transform:uppercase}
+/* ── LEFT: HERO/INFO ── */
+.hero{padding:1rem;animation:fadeInLeft .8s ease both}
+@keyframes fadeInLeft{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:none}}
+.hero-icon{font-size:3.4rem;display:block;margin-bottom:1rem;filter:drop-shadow(0 0 24px var(--g4));animation:glow 3s ease-in-out infinite}
+@keyframes glow{0%,100%{filter:drop-shadow(0 0 16px var(--g4))}50%{filter:drop-shadow(0 0 36px var(--g5))}}
+.hero-title{font-family:var(--font-d);font-size:3.4rem;font-weight:900;letter-spacing:.02em;color:var(--white);line-height:1.05;margin-bottom:.4rem}
+.hero-title span{color:var(--g4);display:block}
+.hero-tagline{font-family:var(--font-m);font-size:.7rem;letter-spacing:.32em;color:var(--gold);opacity:.85;margin-bottom:2rem;text-transform:uppercase}
+.hero-desc{font-size:1rem;line-height:1.7;color:rgba(245,240,232,0.78);margin-bottom:2.2rem;max-width:480px}
+.hero-desc strong{color:var(--g5);font-weight:600}
 
-.card{width:100%;max-width:400px;background:rgba(15,45,24,.88);border:1px solid rgba(77,184,122,.2);border-radius:18px;padding:1.8rem;backdrop-filter:blur(10px);box-shadow:0 20px 60px rgba(0,0,0,.5);animation:fadeUp .7s .15s ease both}
-@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+/* Feature pills */
+.features{display:flex;flex-direction:column;gap:14px;margin-bottom:2rem;max-width:480px}
+.feat{display:flex;gap:14px;align-items:flex-start;padding:13px 16px;background:rgba(15,45,24,0.45);border:1px solid rgba(77,184,122,0.15);border-radius:12px;transition:all .25s}
+.feat:hover{border-color:rgba(77,184,122,0.4);background:rgba(15,45,24,0.65);transform:translateX(4px)}
+.feat-icon{font-size:1.5rem;line-height:1;flex-shrink:0;margin-top:2px}
+.feat-text{flex:1}
+.feat-title{font-family:var(--font-d);font-size:1.02rem;font-weight:700;color:var(--cream);margin-bottom:3px}
+.feat-desc{font-size:.83rem;color:rgba(245,240,232,0.6);line-height:1.5}
 
-.msg{padding:.7rem 1rem;border-radius:10px;font-size:.82rem;margin-bottom:1rem;display:none;line-height:1.5}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:480px}
+.stat-card{padding:12px;background:rgba(15,45,24,0.55);border:1px solid rgba(200,168,75,0.18);border-radius:10px;text-align:center}
+.stat-num{font-family:var(--font-d);font-size:1.6rem;font-weight:900;color:var(--gold2);line-height:1}
+.stat-lbl{font-family:var(--font-m);font-size:.6rem;color:rgba(245,240,232,0.5);letter-spacing:.08em;margin-top:4px;text-transform:uppercase}
+
+/* ── RIGHT: CARD LOGIN ── */
+.right-side{display:flex;justify-content:center;animation:fadeInRight .8s ease both}
+@keyframes fadeInRight{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+
+.card{width:100%;max-width:400px;background:rgba(15,45,24,.92);border:1px solid rgba(77,184,122,.25);border-radius:20px;padding:2rem;backdrop-filter:blur(14px);box-shadow:0 25px 60px rgba(0,0,0,.55)}
+
+.card-title{font-family:var(--font-d);font-size:1.4rem;font-weight:700;color:var(--cream);text-align:center;margin-bottom:.4rem}
+.card-sub{font-size:.83rem;color:rgba(245,240,232,0.55);text-align:center;margin-bottom:1.5rem}
+
+.msg{padding:.75rem 1rem;border-radius:10px;font-size:.82rem;margin-bottom:1rem;display:none;line-height:1.5}
 .msg.error{display:block;background:rgba(224,84,84,.15);border:1px solid rgba(224,84,84,.35);color:#ff8888}
 .msg.success{display:block;background:rgba(77,184,122,.15);border:1px solid rgba(77,184,122,.35);color:var(--g5)}
 
-.tabs{display:flex;gap:0;margin-bottom:1.6rem;background:rgba(10,31,16,.6);border-radius:9px;padding:3px}
-.tab{flex:1;padding:.55rem;border:none;background:transparent;color:rgba(245,240,232,.45);font-family:var(--font-b);font-size:.82rem;font-weight:500;cursor:pointer;border-radius:7px;transition:all .22s}
+.tabs{display:flex;gap:0;margin-bottom:1.5rem;background:rgba(10,31,16,.7);border-radius:9px;padding:3px}
+.tab{flex:1;padding:.6rem;border:none;background:transparent;color:rgba(245,240,232,.45);font-family:var(--font-b);font-size:.82rem;font-weight:500;cursor:pointer;border-radius:7px;transition:all .22s}
 .tab.active{background:var(--g3);color:var(--white);box-shadow:0 2px 8px rgba(45,122,79,.45)}
 
-.btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:.7rem;padding:.82rem 1.2rem;background:var(--white);color:#1a1a1a;border:none;border-radius:11px;font-family:var(--font-b);font-size:.92rem;font-weight:500;cursor:pointer;transition:all .2s;margin-bottom:1.4rem;box-shadow:0 2px 10px rgba(0,0,0,.3)}
-.btn-google:hover{background:#f0f0f0;transform:translateY(-1px)}
+.btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:.7rem;padding:.85rem 1.2rem;background:var(--white);color:#1a1a1a;border:none;border-radius:11px;font-family:var(--font-b);font-size:.92rem;font-weight:500;cursor:pointer;transition:all .2s;margin-bottom:1.4rem;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.btn-google:hover:not(:disabled){background:#f0f0f0;transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,0.4)}
 .btn-google:disabled{opacity:.55;cursor:not-allowed}
 .google-svg{width:18px;height:18px;flex-shrink:0}
 
@@ -62,165 +89,202 @@ html,body{min-height:100%;font-family:var(--font-b);background:var(--g1);color:v
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(77,184,122,.13)}
 
 .field{margin-bottom:1rem}
-.label{display:block;font-size:.72rem;font-weight:500;letter-spacing:.07em;color:rgba(245,240,232,.55);margin-bottom:.35rem;text-transform:uppercase}
-.input{width:100%;padding:.75rem .95rem;background:rgba(10,31,16,.7);border:1px solid rgba(77,184,122,.18);border-radius:9px;color:var(--cream);font-family:var(--font-b);font-size:.92rem;transition:all .2s;outline:none}
+.label{display:block;font-size:.7rem;font-weight:500;letter-spacing:.07em;color:rgba(245,240,232,.55);margin-bottom:.35rem;text-transform:uppercase}
+.input{width:100%;padding:.78rem .95rem;background:rgba(10,31,16,.7);border:1px solid rgba(77,184,122,.2);border-radius:9px;color:var(--cream);font-family:var(--font-b);font-size:.92rem;transition:all .2s;outline:none}
 .input::placeholder{color:rgba(245,240,232,.22)}
 .input:focus{border-color:var(--g4);background:rgba(10,31,16,.92);box-shadow:0 0 0 3px rgba(77,184,122,.1)}
+
 .forgot{display:block;text-align:right;font-size:.72rem;color:var(--g4);opacity:.8;cursor:pointer;margin-top:-.4rem;margin-bottom:.9rem;background:none;border:none;font-family:var(--font-b)}
 .forgot:hover{opacity:1;text-decoration:underline}
 
-.btn-submit{width:100%;padding:.88rem;background:linear-gradient(135deg,var(--g3),var(--g4));color:var(--white);border:none;border-radius:11px;font-family:var(--font-b);font-size:.97rem;font-weight:500;letter-spacing:.04em;cursor:pointer;transition:all .22s;margin-top:.3rem}
-.btn-submit:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(77,184,122,.38)}
+.btn-submit{width:100%;padding:.9rem;background:linear-gradient(135deg,var(--g3),var(--g4));color:var(--white);border:none;border-radius:11px;font-family:var(--font-b);font-size:.97rem;font-weight:500;letter-spacing:.04em;cursor:pointer;transition:all .22s;margin-top:.3rem}
+.btn-submit:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(77,184,122,.4)}
 .btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
 
 .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .welcome{display:none;text-align:center}
-.w-avatar{width:68px;height:68px;border-radius:50%;border:2px solid var(--g4);margin:0 auto .9rem;object-fit:cover;box-shadow:0 0 18px rgba(77,184,122,.25)}
-.w-name{font-family:var(--font-d);font-size:1.35rem;font-weight:700;color:var(--white);margin-bottom:.25rem}
-.w-email{font-size:.78rem;color:rgba(245,240,232,.45);margin-bottom:.5rem}
-.w-woli{display:inline-flex;align-items:center;gap:.35rem;background:rgba(212,168,67,.13);border:1px solid rgba(212,168,67,.28);color:var(--gold2);padding:.28rem .75rem;border-radius:20px;font-family:var(--font-m);font-size:.82rem;margin-bottom:1.4rem}
-.btn-play{width:100%;padding:.95rem;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--g1);border:none;border-radius:11px;font-family:var(--font-d);font-size:1.05rem;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:all .22s;margin-bottom:.65rem}
-.btn-play:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(212,168,67,.38)}
-.btn-signout{width:100%;padding:.65rem;background:transparent;color:rgba(245,240,232,.35);border:1px solid rgba(245,240,232,.1);border-radius:9px;font-family:var(--font-b);font-size:.82rem;cursor:pointer;transition:all .2s}
-.btn-signout:hover{color:var(--red);border-color:rgba(224,84,84,.28)}
+.w-avatar{width:72px;height:72px;border-radius:50%;border:2px solid var(--g4);margin:0 auto .9rem;object-fit:cover;box-shadow:0 0 22px rgba(77,184,122,.3)}
+.w-name{font-family:var(--font-d);font-size:1.4rem;font-weight:700;color:var(--white);margin-bottom:.25rem}
+.w-email{font-size:.8rem;color:rgba(245,240,232,.45);margin-bottom:.6rem}
+.w-woli{display:inline-flex;align-items:center;gap:.4rem;background:rgba(212,168,67,.13);border:1px solid rgba(212,168,67,.3);color:var(--gold2);padding:.32rem .85rem;border-radius:20px;font-family:var(--font-m);font-size:.83rem;margin-bottom:1.5rem}
+.btn-play{width:100%;padding:1rem;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--g1);border:none;border-radius:11px;font-family:var(--font-d);font-size:1.05rem;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:all .22s;margin-bottom:.7rem}
+.btn-play:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(212,168,67,.4)}
+.btn-signout{width:100%;padding:.7rem;background:transparent;color:rgba(245,240,232,.35);border:1px solid rgba(245,240,232,.1);border-radius:9px;font-family:var(--font-b);font-size:.82rem;cursor:pointer;transition:all .2s}
+.btn-signout:hover{color:var(--red);border-color:rgba(224,84,84,.3)}
 
-.security-note{font-size:.65rem;color:rgba(245,240,232,.3);text-align:center;margin-top:.6rem;letter-spacing:.04em}
+.security-note{font-size:.66rem;color:rgba(245,240,232,.32);text-align:center;margin-top:.7rem;letter-spacing:.04em}
 .security-note .shield{color:var(--g4)}
 
-.footer{text-align:center;margin-top:1.4rem;font-size:.7rem;color:rgba(245,240,232,.28);letter-spacing:.04em;animation:fadeUp .7s .3s ease both}
-.footer a{color:var(--g4);text-decoration:none;opacity:.8}
-.footer a:hover{opacity:1}
+.footer{text-align:center;margin-top:2rem;font-size:.7rem;color:rgba(245,240,232,.3);letter-spacing:.04em;animation:fadeInRight .8s .3s ease both}
 
-@media(max-width:440px){.card{padding:1.4rem}.logo-title{font-size:2rem}}
-</style>
-<!-- Google Translate Widget styles -->
-<style>
-.skiptranslate, .goog-te-banner-frame { display: none !important; }
-body { top: 0 !important; }
-.goog-te-gadget { font-size: 0 !important; color: transparent !important; }
-.goog-te-gadget .goog-te-combo {
-  margin: 0 !important;
-  padding: 6px 12px !important;
-  background: rgba(15, 45, 24, 0.92) !important;
-  color: #f5f0e8 !important;
-  border: 1px solid rgba(77, 184, 122, 0.35) !important;
-  border-radius: 20px !important;
-  font-family: 'DM Sans', sans-serif !important;
-  font-size: 0.72rem !important;
-  cursor: pointer !important;
-  outline: none !important;
-  backdrop-filter: blur(8px);
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .container{grid-template-columns:1fr;gap:2rem;max-width:480px}
+  .hero{text-align:center;order:2;padding:.5rem}
+  .right-side{order:1}
+  .hero-icon{margin:0 auto 1rem}
+  .hero-title{font-size:2.4rem}
+  .features{margin-left:auto;margin-right:auto}
+  .feat{text-align:left}
+  .stats-grid{margin-left:auto;margin-right:auto}
 }
-.goog-te-gadget .goog-te-combo option { background: #0a1f10 !important; color: #f5f0e8 !important; }
-.goog-logo-link, .goog-te-gadget > span > a, .goog-te-gadget > span { display: none !important; }
-.goog-te-gadget::before { content: '🌐 '; color: #4caf78; font-size: 0.85rem; }
-.goog-tooltip, .goog-tooltip:hover { display: none !important; }
-.goog-text-highlight { background-color: transparent !important; border: none !important; box-shadow: none !important; }
-#google_translate_element {
-  position: fixed;
-  top: 18px;
-  right: 18px;
-  z-index: 50;
-  display: inline-flex;
-  align-items: center;
+@media(max-width:480px){
+  .card{padding:1.5rem}
+  .hero-title{font-size:2rem}
+  .hero-desc{font-size:.92rem}
+  .wrap{padding:1.5rem 0.7rem}
 }
 </style>
 </head>
 <body>
 
-<!-- Language selector (top-right corner) -->
-<div id="google_translate_element"></div>
-
 <div class="bg"></div>
 <div id="particles"></div>
 
 <div class="wrap">
+  <div class="container">
 
-  <div class="logo-area">
-    <span class="logo-icon">🌿</span>
-    <div class="logo-title">WOLI <span>FARM</span></div>
-    <div class="logo-tag">Cultiva · Cosecha · Gana Tokens</div>
-  </div>
+    <!-- ───────────── LEFT: HERO ───────────── -->
+    <div class="hero">
+      <span class="hero-icon">🌿</span>
+      <div class="hero-title">WOLI <span>FARM</span></div>
+      <div class="hero-tagline">Cultiva · Cosecha · Gana Tokens</div>
+      <div class="hero-desc">
+        El primer juego <strong>Play-to-Earn</strong> de cultivo de cáñamo en <strong>tiempo real</strong>.
+        Cuidá tu planta durante 7 días reales, recibí alertas en horarios aleatorios,
+        y ganá tokens WOLI más NFTs únicos por cada cosecha exitosa.
+      </div>
 
-  <div class="card">
+      <div class="features">
+        <div class="feat">
+          <div class="feat-icon">🌱</div>
+          <div class="feat-text">
+            <div class="feat-title">7 días de cultivo real</div>
+            <div class="feat-desc">Cada planta crece a través de 8 etapas únicas, durante una semana de tiempo real.</div>
+          </div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">⏰</div>
+          <div class="feat-text">
+            <div class="feat-title">Alertas aleatorias</div>
+            <div class="feat-desc">3 riegos y 1 fertilización al día en horarios impredecibles. Constancia = recompensas.</div>
+          </div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">🪙</div>
+          <div class="feat-text">
+            <div class="feat-title">Hasta 950 WOLI por ciclo</div>
+            <div class="feat-desc">Convertibles 1:1 a token ERC-20 cuando hagamos el lanzamiento blockchain.</div>
+          </div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">🌸</div>
+          <div class="feat-text">
+            <div class="feat-title">NFT único por cosecha</div>
+            <div class="feat-desc">Cada planta cosechada se guarda como placeholder de NFT, listo para mintear en Sepolia.</div>
+          </div>
+        </div>
+      </div>
 
-    <div class="msg" id="msg"></div>
-
-    <!-- Estado logueado -->
-    <div class="welcome" id="welcome">
-      <img class="w-avatar" id="w-avatar" src="" alt="">
-      <div class="w-name" id="w-name">Bienvenido</div>
-      <div class="w-email" id="w-email"></div>
-      <div class="w-woli">🪙 <span id="w-woli">0</span> WOLI guardados</div>
-      <button class="btn-play" onclick="goGame()">🌱 Ir a mi Granja</button>
-      <button class="btn-signout" onclick="doSignOut()">Cerrar sesión</button>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-num">8</div>
+          <div class="stat-lbl">Etapas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">5</div>
+          <div class="stat-lbl">Rarezas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">14</div>
+          <div class="stat-lbl">Idiomas</div>
+        </div>
+      </div>
     </div>
 
-    <!-- Formularios -->
-    <div id="forms">
+    <!-- ───────────── RIGHT: LOGIN CARD ───────────── -->
+    <div class="right-side">
+      <div class="card">
 
-      <div class="tabs">
-        <button class="tab active" id="tab-login" onclick="switchTab('login')">Iniciar Sesión</button>
-        <button class="tab" id="tab-signup" onclick="switchTab('signup')">Crear Cuenta</button>
+        <div class="msg" id="msg"></div>
+
+        <!-- Estado logueado -->
+        <div class="welcome" id="welcome">
+          <img class="w-avatar" id="w-avatar" src="" alt="">
+          <div class="w-name" id="w-name">Bienvenido</div>
+          <div class="w-email" id="w-email"></div>
+          <div class="w-woli">🪙 <span id="w-woli">0</span> WOLI guardados</div>
+          <button class="btn-play" onclick="goGame()">🌱 Ir a mi Granja</button>
+          <button class="btn-signout" onclick="doSignOut()">Cerrar sesión</button>
+        </div>
+
+        <!-- Formularios -->
+        <div id="forms">
+
+          <div class="card-title">Empezá a Cultivar</div>
+          <div class="card-sub">Iniciá sesión o creá tu cuenta gratis</div>
+
+          <div class="tabs">
+            <button class="tab active" id="tab-login" onclick="switchTab('login')">Iniciar Sesión</button>
+            <button class="tab" id="tab-signup" onclick="switchTab('signup')">Crear Cuenta</button>
+          </div>
+
+          <button class="btn-google" id="btn-google" onclick="doGoogle()">
+            <svg class="google-svg" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            Continuar con Google
+          </button>
+
+          <div class="divider">o con correo</div>
+
+          <div id="form-login">
+            <div class="field">
+              <label class="label">Correo electrónico</label>
+              <input class="input" id="login-email" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email">
+            </div>
+            <div class="field">
+              <label class="label">Contraseña</label>
+              <input class="input" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+            </div>
+            <button class="forgot" onclick="doReset()">¿Olvidaste tu contraseña?</button>
+            <button class="btn-submit" id="btn-login" onclick="doLogin()">Iniciar Sesión</button>
+          </div>
+
+          <div id="form-signup" style="display:none">
+            <div class="field">
+              <label class="label">Nombre de usuario</label>
+              <input class="input" id="signup-name" type="text" placeholder="Agricultor Woli" autocomplete="username">
+            </div>
+            <div class="field">
+              <label class="label">Correo electrónico</label>
+              <input class="input" id="signup-email" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email">
+            </div>
+            <div class="field">
+              <label class="label">Contraseña</label>
+              <input class="input" id="signup-pass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSignup()">
+            </div>
+            <button class="btn-submit" id="btn-signup" onclick="doSignup()">Crear Cuenta Gratis</button>
+          </div>
+
+          <div class="security-note">
+            <span class="shield">🛡️</span> Protegido por reCAPTCHA + honeypot anti-bots
+          </div>
+
+        </div>
       </div>
 
-      <!-- Google -->
-      <button class="btn-google" id="btn-google" onclick="doGoogle()">
-        <svg class="google-svg" viewBox="0 0 48 48">
-          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-        </svg>
-        Continuar con Google
-      </button>
-
-      <div class="divider">o con correo</div>
-
-      <!-- LOGIN -->
-      <div id="form-login">
-        <div class="field">
-          <label class="label">Correo electrónico</label>
-          <input class="input" id="login-email" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email">
-        </div>
-        <div class="field">
-          <label class="label">Contraseña</label>
-          <input class="input" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
-        </div>
-        <button class="forgot" onclick="doReset()">¿Olvidaste tu contraseña?</button>
-        <button class="btn-submit" id="btn-login" onclick="doLogin()">Iniciar Sesión</button>
+      <div class="footer">
+        WOLI FARM · COSTA RICA · v0.2 · Demo Web3
       </div>
-
-      <!-- SIGNUP -->
-      <div id="form-signup" style="display:none">
-        <div class="field">
-          <label class="label">Nombre de usuario</label>
-          <input class="input" id="signup-name" type="text" placeholder="Agricultor Woli" autocomplete="username">
-        </div>
-        <div class="field">
-          <label class="label">Correo electrónico</label>
-          <input class="input" id="signup-email" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email">
-        </div>
-        <div class="field">
-          <label class="label">Contraseña</label>
-          <input class="input" id="signup-pass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSignup()">
-        </div>
-        <button class="btn-submit" id="btn-signup" onclick="doSignup()">Crear Cuenta</button>
-      </div>
-
-      <div class="security-note">
-        <span class="shield">🛡️</span> Protegido por reCAPTCHA + honeypot anti-bots
-      </div>
-
     </div>
-  </div>
 
-  <div class="footer">
-    WOLI FARM · COSTA RICA · v0.2
   </div>
-
 </div>
 
 <!-- Honeypot field — los bots lo llenan, los humanos no lo ven -->
@@ -232,7 +296,6 @@ const auth = firebase.auth();
 const db   = firebase.firestore();
 
 // ── ANTI-BOT: timing tracker ──
-// Humanos demoran al menos 1.5s en interactuar. Bots son instantáneos.
 const _pageLoadTime = Date.now();
 let _humanInteracted = false;
 ['mousemove','keydown','touchstart','scroll'].forEach(ev =>
@@ -242,11 +305,8 @@ let _humanInteracted = false;
 function _isBot() {
   const elapsed = Date.now() - _pageLoadTime;
   const honeypot = document.getElementById('hp-field').value;
-  // Si el honeypot tiene valor → es un bot
   if (honeypot) return 'honeypot_filled';
-  // Si pasó menos de 1.5s desde load → muy probable bot
   if (elapsed < 1500) return 'too_fast';
-  // Si el usuario nunca movió mouse/teclado/touch → muy probable bot
   if (!_humanInteracted) return 'no_human_interaction';
   return null;
 }
@@ -261,7 +321,7 @@ function _isBot() {
     p.textContent = emojis[Math.floor(Math.random()*emojis.length)];
     p.style.left  = Math.random()*100+'%';
     p.style.bottom= Math.random()*30+'%';
-    p.style.setProperty('--dur',(6+Math.random()*8)+'s');
+    p.style.setProperty('--dur',(7+Math.random()*9)+'s');
     p.style.setProperty('--del',(Math.random()*10)+'s');
     el.appendChild(p);
   }
@@ -278,7 +338,6 @@ auth.onAuthStateChanged(async (user) => {
   }
 });
 
-// ── ENSURE USER DOC ──
 async function ensureUserDoc(user) {
   const ref = db.collection('users').doc(user.uid);
   const doc = await ref.get();
@@ -328,10 +387,8 @@ function switchTab(tab) {
   clearMsg();
 }
 
-// ── GOOGLE LOGIN ──
 async function doGoogle() {
   clearMsg();
-  // Anti-bot check
   const botReason = _isBot();
   if (botReason) { showMsg('Verificación de seguridad falló. Esperá un momento.'); return; }
 
@@ -350,7 +407,6 @@ async function doGoogle() {
   }
 }
 
-// ── EMAIL LOGIN ──
 async function doLogin() {
   clearMsg();
   const botReason = _isBot();
@@ -368,7 +424,6 @@ async function doLogin() {
   }
 }
 
-// ── SIGNUP ──
 async function doSignup() {
   clearMsg();
   const botReason = _isBot();
@@ -386,7 +441,7 @@ async function doSignup() {
     showMsg('¡Cuenta creada! Redirigiendo...', 'success');
   } catch(err) {
     showMsg(friendlyError(err.code));
-    setLoading('btn-signup', false, 'Crear Cuenta');
+    setLoading('btn-signup', false, 'Crear Cuenta Gratis');
   }
 }
 
@@ -454,18 +509,8 @@ function friendlyError(code) {
 }
 </script>
 
-<!-- Google Translate Widget loader -->
-<script type="text/javascript">
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement({
-    pageLanguage: 'es',
-    includedLanguages: 'en,es,de,tl,zh-CN,zh-TW,pt,fr,it,ja,ko,ru,ar,hi',
-    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-    autoDisplay: false
-  }, 'google_translate_element');
-}
-</script>
-<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
+<!-- Custom Language Selector -->
+<script src="js/lang-selector.js"></script>
 
 </body>
 </html>
