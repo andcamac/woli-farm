@@ -80,10 +80,5 @@ woli-farm/
 - **Conversión:** Los puntos WOLI del demo serán convertibles 1:1 a tokens.
 - **Staking:** Holders de NFTs raros reciben multiplicadores de yield.
 
----
 
-## 🚀 Para Correr
 
-Abrí `index.html` en cualquier navegador moderno. No necesita servidor.
-
-Para resetear: `localStorage.removeItem('woli_farm_v1'); location.reload()`
