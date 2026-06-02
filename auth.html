@@ -14,6 +14,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
+<script src="js/audit.js"></script>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -333,6 +334,7 @@ auth.onAuthStateChanged(async (user) => {
     await ensureUserDoc(user);
     const data = await loadUserData(user.uid);
     showWelcome(user, data);
+    if (typeof Audit !== 'undefined') Audit.log('login');
   } else {
     showForms();
   }

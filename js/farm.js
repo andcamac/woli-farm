@@ -37,6 +37,7 @@ const Farm = (() => {
     saveState(S);
     UI.log(S, '🌱 Semilla plantada. ¡Ciclo de 7 días iniciado!', 'good');
     UI.toast('¡Semilla plantada! Espera las notificaciones de riego.');
+    if (typeof Audit !== 'undefined') Audit.log('plant');
     Notifications.requestPermission();
   }
 
@@ -107,6 +108,7 @@ const Farm = (() => {
     if (result.ok) {
       UI.log(S, `🛒 ${result.msg}`, 'good');
       Shop.render(S); // refresh shop prices/balance
+      if (typeof Audit !== 'undefined') Audit.log('purchase', { item: itemKey });
     }
     saveState(S);
     UI.render(S);
@@ -128,6 +130,15 @@ const Farm = (() => {
       saveHarvestSnapshot(S, bonus, rarity).catch(e =>
         console.warn('Harvest save failed:', e.message)
       );
+
+      if (typeof Audit !== 'undefined') Audit.log('harvest', {
+        rarity:      rarity.label,
+        rarityPct:   rarity.pct,
+        bonus:       bonus,
+        coinsEarned: S.coinsEarned,
+        perfectDays: S.perfectDays,
+        maxStreak:   S.maxStreak,
+      });
 
       setTimeout(() => UI.showHarvest(S, bonus, rarity), 1200);
       UI.log(S, `🌸 ¡COSECHA! +${bonus} WOLI — Rareza: ${rarity.label}`, 'harvest');

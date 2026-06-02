@@ -2,27 +2,53 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Usuarios — solo el propio usuario lee/escribe su doc
-    match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow create, update: if request.auth != null && request.auth.uid == userId;
-      allow delete: if false;
+    function isSignedIn() {
+      return request.auth != null;
+    }
 
-      // Subcolección harvests (cosechas / NFTs placeholder)
+    // A user is an admin iff a doc exists at admins/{their-uid}.
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // ── Admin allowlist ──
+    // A signed-in user may read ONLY their own admin doc (to check status).
+    // Admins are provisioned manually in the console / via Admin SDK.
+    // No client writes, ever.
+    match /admins/{uid} {
+      allow read:  if isSignedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // ── Users ──
+    match /users/{userId} {
+      // Owner reads own doc; admins read any doc.
+      allow read:          if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow create, update: if isSignedIn() && request.auth.uid == userId;
+      allow delete:         if false;
+
+      // ── Harvests (NFT placeholders) ──
       match /harvests/{harvestId} {
-        // El dueño puede leer todas sus cosechas
-        // Cualquier usuario logueado puede leer cosechas marcadas como públicas
-        allow read: if request.auth != null && (
+        allow read: if isSignedIn() && (
           request.auth.uid == userId ||
+          isAdmin() ||
           resource.data.isPublic == true
         );
-        // Solo el dueño puede crear/actualizar (no borrar — son permanentes como NFTs)
-        allow create, update: if request.auth != null && request.auth.uid == userId;
-        allow delete: if false;
+        allow create, update: if isSignedIn() && request.auth.uid == userId;
+        allow delete:         if false;
       }
     }
 
-    // Bloquear todo lo demás
+    // ── Audit logs ──
+    // Written ONLY by the serverless layer (Admin SDK bypasses these rules).
+    // Clients can never write. Admins may read; everyone else is denied.
+    match /audit_logs/{logId} {
+      allow read:  if isAdmin();
+      allow write: if false;
+    }
+
+    // ── Deny everything else ──
     match /{document=**} {
       allow read, write: if false;
     }

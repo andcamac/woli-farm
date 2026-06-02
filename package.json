@@ -1,0 +1,12 @@
+{
+  "name": "woli-farm",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Woli Farm — serverless layer (audit logging + admin stats)",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  }
+}
