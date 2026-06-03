@@ -17,6 +17,7 @@
 <!-- Plant rendering -->
 <script src="js/config.js"></script>
 <script src="js/plant.js"></script>
+<script src="js/nft-svg.js"></script>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -310,11 +311,11 @@ function renderPage() {
 
   content.innerHTML = html;
 
-  // Render plant SVGs after innerHTML insertion
+  // Render botanical NFT SVGs after innerHTML insertion
   filtered.forEach(h => {
     const svgEl = document.getElementById(`plant-${h.id}`);
     if (svgEl) {
-      drawPlantInto(svgEl, 7, h.health || 100);
+      svgEl.outerHTML = WoliNFT.buildSvg(h);
     }
   });
 }
