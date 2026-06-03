@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Woli Farm — Admin Console</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0a1f10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g1:#0a1f10;--g2:#10301a;--g3:#1a4a2e;--g4:#2d7a4f;--g5:#4caf78;--g6:#8fd4a8;
+  --gold:#c8a84b;--gold2:#f0d080;--cream:#f5f0e8;
+  --red:#e05454;--amber:#e0a84b;--blue:#60a0f0;
+  --line:rgba(77,184,122,.16);
+  --font-d:'Playfair Display',serif;
+  --font-b:'DM Sans',sans-serif;
+  --font-m:'DM Mono',monospace;
+}
+html,body{min-height:100%;font-family:var(--font-b);background:var(--g1);color:var(--cream);overflow-x:hidden}
+
+/* ── Atmosphere ── */
+.bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 20% -10%,#1a4a28 0%,#0a1f10 55%)}
+.bg::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(rgba(77,184,122,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(77,184,122,.025) 1px,transparent 1px);
+  background-size:42px 42px;mask-image:radial-gradient(ellipse at 50% 0%,#000 0%,transparent 75%)}
+
+.shell{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:2rem 1.5rem 4rem}
+
+/* ── Header ── */
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:1.5rem;
+  padding-bottom:1.3rem;border-bottom:1px solid var(--line);margin-bottom:2rem;
+  animation:rise .6s ease both}
+.brand{display:flex;flex-direction:column;gap:.25rem}
+.eyebrow{font-family:var(--font-m);font-size:.62rem;letter-spacing:.34em;color:var(--gold);text-transform:uppercase;opacity:.85}
+.h1{font-family:var(--font-d);font-size:2.2rem;font-weight:900;color:var(--white);line-height:1;letter-spacing:.01em}
+.h1 em{font-style:normal;color:var(--g5)}
+.top-right{display:flex;align-items:center;gap:.8rem;flex-shrink:0}
+.whoami{text-align:right;font-size:.74rem;line-height:1.4}
+.whoami b{color:var(--gold2);font-weight:500}
+.whoami span{color:rgba(245,240,232,.45);font-family:var(--font-m);font-size:.66rem}
+.btn{font-family:var(--font-b);font-size:.76rem;font-weight:500;border-radius:9px;cursor:pointer;
+  padding:.55rem .9rem;border:1px solid var(--line);background:rgba(15,45,24,.5);color:var(--cream);
+  transition:all .18s;white-space:nowrap}
+.btn:hover{border-color:rgba(77,184,122,.45);background:rgba(15,45,24,.85);transform:translateY(-1px)}
+.btn:active{transform:none}
+.btn-ghost{background:transparent;color:rgba(245,240,232,.5)}
+.btn-ghost:hover{color:var(--red);border-color:rgba(224,84,84,.3)}
+
+/* ── Section heading ── */
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 1rem;gap:1rem}
+.sec-title{font-family:var(--font-d);font-size:1.15rem;font-weight:700;color:var(--cream)}
+.sec-meta{font-family:var(--font-m);font-size:.66rem;color:rgba(245,240,232,.4);letter-spacing:.04em}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--g5);margin-right:6px;
+  box-shadow:0 0 0 0 rgba(76,175,120,.6);animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(76,175,120,.5)}70%{box-shadow:0 0 0 7px rgba(76,175,120,0)}100%{box-shadow:0 0 0 0 rgba(76,175,120,0)}}
+
+/* ── Stat grid ── */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:2.6rem}
+.card{position:relative;padding:1.15rem 1.2rem 1.1rem;background:rgba(15,45,24,.55);
+  border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  animation:rise .6s ease both}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent,var(--g4)),transparent);opacity:.7}
+.card .k{font-family:var(--font-m);font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(245,240,232,.5);margin-bottom:.55rem;display:flex;align-items:center;gap:.4rem}
+.card .v{font-family:var(--font-d);font-size:2.1rem;font-weight:900;line-height:1;color:var(--cream)}
+.card .v.gold{color:var(--gold2)}
+.card .sub{font-family:var(--font-m);font-size:.62rem;color:rgba(245,240,232,.38);margin-top:.45rem}
+.ico{font-size:.95rem;filter:saturate(1.1)}
+.span2{grid-column:span 2}
+
+/* ── Audit feed ── */
+.panel{background:rgba(13,38,21,.55);border:1px solid var(--line);border-radius:16px;
+  overflow:hidden;animation:rise .7s ease both}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.78rem;min-width:760px}
+thead th{font-family:var(--font-m);font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;
+  color:rgba(245,240,232,.45);text-align:left;padding:.85rem 1rem;border-bottom:1px solid var(--line);
+  background:rgba(10,31,16,.5);position:sticky;top:0}
+tbody td{padding:.7rem 1rem;border-bottom:1px solid rgba(77,184,122,.07);vertical-align:middle}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:rgba(77,184,122,.05)}
+.mono{font-family:var(--font-m)}
+.ip{font-family:var(--font-m);font-size:.76rem;color:var(--gold2)}
+.geo{font-size:.66rem;color:rgba(245,240,232,.5);margin-top:2px}
+.ua{font-family:var(--font-m);font-size:.64rem;color:rgba(245,240,232,.4);max-width:220px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.usr{font-weight:500;color:var(--cream)}
+.uid{font-family:var(--font-m);font-size:.6rem;color:rgba(245,240,232,.32)}
+.ts{font-family:var(--font-m);font-size:.7rem;color:rgba(245,240,232,.6);white-space:nowrap}
+
+/* Action tags */
+.tag{display:inline-block;font-family:var(--font-m);font-size:.62rem;letter-spacing:.05em;
+  padding:.22rem .5rem;border-radius:6px;border:1px solid currentColor;text-transform:lowercase}
+.tag.login,.tag.signup{color:var(--g6)}
+.tag.harvest{color:var(--gold2)}
+.tag.purchase{color:var(--blue)}
+.tag.plant{color:var(--g5)}
+.tag.mint_request,.tag.mint_success{color:var(--gold)}
+.tag.mint_failed,.tag.logout{color:var(--red)}
+.tag.page_view{color:rgba(245,240,232,.45)}
+
+/* ── States ── */
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:60vh;text-align:center;gap:1rem;animation:rise .5s ease both}
+.state .em{font-size:3rem}
+.state h2{font-family:var(--font-d);font-size:1.6rem;color:var(--cream)}
+.state p{color:rgba(245,240,232,.55);max-width:420px;line-height:1.6;font-size:.9rem}
+.spinner{width:34px;height:34px;border:3px solid rgba(77,184,122,.2);border-top-color:var(--g5);
+  border-radius:50%;animation:spin .8s linear infinite}
+.empty-row td{text-align:center;color:rgba(245,240,232,.4);padding:2.2rem;font-style:italic}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.hidden{display:none!important}
+
+/* ── Responsive ── */
+@media(max-width:880px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .h1{font-size:1.7rem}
+}
+@media(max-width:520px){
+  .shell{padding:1.3rem 1rem 3rem}
+  .top{flex-direction:column;align-items:flex-start}
+  .top-right{width:100%;justify-content:space-between}
+  .grid{gap:10px}
+  .card .v{font-size:1.7rem}
+}
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<div class="shell">
+
+  <!-- ───────── LOADING ───────── -->
+  <div id="view-loading" class="state">
+    <div class="spinner"></div>
+    <p>Verificando credenciales…</p>
+  </div>
+
+  <!-- ───────── ACCESS DENIED ───────── -->
+  <div id="view-denied" class="state hidden">
+    <div class="em">🔒</div>
+    <h2>Acceso restringido</h2>
+    <p>Tu cuenta no tiene permisos de administrador. Si creés que es un error,
+       pedí que agreguen tu UID a la colección <span class="mono">admins</span>.</p>
+    <div style="display:flex;gap:.6rem">
+      <button class="btn" onclick="location.href='index.html'">🌱 Ir al juego</button>
+      <button class="btn btn-ghost" onclick="signOut()">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <!-- ───────── DASHBOARD ───────── -->
+  <div id="view-dash" class="hidden">
+
+    <div class="top">
+      <div class="brand">
+        <div class="eyebrow">Woli Farm · Console</div>
+        <div class="h1">Admin <em>Dashboard</em></div>
+      </div>
+      <div class="top-right">
+        <div class="whoami">
+          <div><b id="me-name">—</b></div>
+          <span id="me-email"></span>
+        </div>
+        <button class="btn" id="btn-refresh" onclick="refresh()">↻ Actualizar</button>
+        <button class="btn btn-ghost" onclick="signOut()">Salir</button>
+      </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="grid" id="stat-grid">
+      <div class="card" style="--accent:var(--g5);animation-delay:.02s">
+        <div class="k"><span class="ico">👥</span> Usuarios</div>
+        <div class="v" id="s-users">—</div>
+        <div class="sub" id="s-users-sub">total registrados</div>
+      </div>
+      <div class="card" style="--accent:var(--g4);animation-delay:.06s">
+        <div class="k"><span class="ico">🌸</span> Cosechas</div>
+        <div class="v" id="s-harvests">—</div>
+        <div class="sub">NFT placeholders generados</div>
+      </div>
+      <div class="card" style="--accent:var(--gold);animation-delay:.10s">
+        <div class="k"><span class="ico">🔗</span> NFTs Minteados</div>
+        <div class="v gold" id="s-minted">—</div>
+        <div class="sub">on-chain confirmados</div>
+      </div>
+      <div class="card" style="--accent:var(--g6);animation-delay:.14s">
+        <div class="k"><span class="ico">🔄</span> Ciclos Completos</div>
+        <div class="v" id="s-cycles">—</div>
+        <div class="sub">ciclos de 7 días</div>
+      </div>
+
+      <div class="card span2" style="--accent:var(--gold2);animation-delay:.18s">
+        <div class="k"><span class="ico">🪙</span> WOLI en Circulación</div>
+        <div class="v gold" id="s-woli">—</div>
+        <div class="sub" id="s-woli-sub">balance combinado de jugadores</div>
+      </div>
+      <div class="card" style="--accent:var(--g5);animation-delay:.22s">
+        <div class="k"><span class="ico">📈</span> WOLI Ganados</div>
+        <div class="v" id="s-earned">—</div>
+        <div class="sub">acumulado histórico</div>
+      </div>
+      <div class="card" style="--accent:var(--blue);animation-delay:.26s">
+        <div class="k"><span class="ico">🛒</span> WOLI Gastados</div>
+        <div class="v" id="s-spent">—</div>
+        <div class="sub">en la tienda</div>
+      </div>
+    </div>
+
+    <!-- Audit feed -->
+    <div class="sec-head">
+      <div class="sec-title"><span class="dot"></span>Registro de Auditoría</div>
+      <div class="sec-meta" id="feed-meta">—</div>
+    </div>
+    <div class="panel">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:130px">Hora</th>
+              <th>Usuario</th>
+              <th style="width:120px">Acción</th>
+              <th style="width:150px">IP</th>
+              <th>Ubicación</th>
+              <th>Navegador</th>
+            </tr>
+          </thead>
+          <tbody id="feed-body">
+            <tr class="empty-row"><td colspan="6">Cargando registros…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const auth = firebase.auth();
+let _autoTimer = null;
+
+// ── View switching ──
+function show(view) {
+  ['loading','denied','dash'].forEach(v =>
+    document.getElementById('view-' + v).classList.toggle('hidden', v !== view)
+  );
+}
+
+// ── Auth gate ──
+auth.onAuthStateChanged((user) => {
+  if (!user) { location.href = 'auth.html'; return; }
+  document.getElementById('me-name').textContent  = user.displayName || (user.email || '').split('@')[0];
+  document.getElementById('me-email').textContent = user.email || '';
+  refresh();
+  // Live-ish feel: auto-refresh every 30s
+  if (_autoTimer) clearInterval(_autoTimer);
+  _autoTimer = setInterval(refresh, 30000);
+});
+
+// ── Fetch stats from the serverless endpoint ──
+async function refresh() {
+  const user = auth.currentUser;
+  if (!user) return;
+  const btn = document.getElementById('btn-refresh');
+  if (btn) { btn.disabled = true; btn.textContent = '↻ …'; }
+
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch('/api/admin-stats', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+
+    if (res.status === 403) { show('denied'); cleanup(); return; }
+    if (res.status === 401) { location.href = 'auth.html'; return; }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const data = await res.json();
+    render(data);
+    show('dash');
+  } catch (e) {
+    // On a transient error, keep whatever is on screen but surface it.
+    console.warn('admin-stats failed:', e.message);
+    if (document.getElementById('view-dash').classList.contains('hidden')) {
+      show('dash'); // show shell so the user isn't stuck on the spinner
+    }
+    const meta = document.getElementById('feed-meta');
+    if (meta) meta.textContent = '⚠ error al cargar — reintentá';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Actualizar'; }
+  }
+}
+
+function cleanup() { if (_autoTimer) { clearInterval(_autoTimer); _autoTimer = null; } }
+
+// ── Render ──
+function render(data) {
+  const t = data.totals || {};
+  setNum('s-users', t.users);
+  setNum('s-harvests', t.harvests);
+  setNum('s-minted', t.nftsMinted);
+  setNum('s-cycles', t.cyclesCompleted);
+  setNum('s-woli', t.woliInCirculation);
+  setNum('s-earned', t.woliEarned);
+  setNum('s-spent', t.woliSpent);
+
+  // transparency note: sums cover N sampled docs
+  const sampled = t.usersSampled, total = t.users;
+  const sub = document.getElementById('s-woli-sub');
+  if (sub && typeof sampled === 'number' && typeof total === 'number' && sampled < total) {
+    sub.textContent = `balance de ${fmt(sampled)} de ${fmt(total)} jugadores`;
+  }
+
+  renderFeed(data.recentLogs || []);
+
+  const when = data.generatedAt ? new Date(data.generatedAt) : new Date();
+  document.getElementById('feed-meta').textContent =
+    `${(data.recentLogs || []).length} eventos · actualizado ${when.toLocaleTimeString()}`;
+}
+
+function renderFeed(logs) {
+  const body = document.getElementById('feed-body');
+  if (!logs.length) {
+    body.innerHTML = '<tr class="empty-row"><td colspan="6">Sin eventos registrados todavía.</td></tr>';
+    return;
+  }
+  body.innerHTML = logs.map(l => {
+    const when = l.timestamp ? new Date(l.timestamp) : null;
+    const ts   = when ? `${when.toLocaleDateString([], {month:'short',day:'2-digit'})} ${when.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})}` : '—';
+    const name = l.email ? esc(l.email) : '—';
+    const uid  = l.uid ? esc(l.uid.slice(0, 12)) + '…' : '';
+    const geo  = l.geo ? [l.geo.city, l.geo.region, l.geo.country].filter(Boolean).map(esc).join(', ') : '—';
+    const ua   = l.userAgent ? esc(l.userAgent) : '—';
+    const act  = esc(l.action || '');
+    return `<tr>
+      <td class="ts">${ts}</td>
+      <td><div class="usr">${name}</div><div class="uid">${uid}</div></td>
+      <td><span class="tag ${act}">${act}</span></td>
+      <td class="ip">${l.ip ? esc(l.ip) : '—'}</td>
+      <td><div class="geo" style="font-size:.74rem;color:rgba(245,240,232,.65)">${geo || '—'}</div></td>
+      <td><div class="ua" title="${ua}">${ua}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Helpers ──
+function setNum(id, n) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = (typeof n === 'number') ? fmt(n) : '—';
+}
+function fmt(n) { return Number(n).toLocaleString('en-US'); }
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+async function signOut() { cleanup(); await auth.signOut(); location.href = 'auth.html'; }
+</script>
+
+</body>
+</html>
