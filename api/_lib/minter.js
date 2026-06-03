@@ -1,10 +1,6 @@
 /* ═══════════════════════════════════════════
-   MINTER — shared on-chain mint helper
+   MINTER — Updated for optimized contract
    Woli Farm · serverless layer
-   ═══════════════════════════════════════════
-   Submits a safeMint tx (does not wait for
-   confirmation) and returns the tx + predicted
-   token id. Used by the admin random-mint endpoint.
 ═══════════════════════════════════════════ */
 'use strict';
 
@@ -12,17 +8,18 @@ const { ethers } = require('ethers');
 const { getChain } = require('./chains');
 
 const ABI = [
-  'function safeMint(address to, string uri) returns (uint256)',
+  'function safeMintTest(address to, uint8 rarity) returns (uint256)',
+  'function safeMint(address to, uint8 rarity, uint16 score, uint8 cycleDays) returns (uint256)',
   'function totalMinted() view returns (uint256)',
-  'event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)',
+  'event HarvestMinted(uint256 indexed tokenId, address to, uint8 rarity, uint16 score)'
 ];
 
-async function mintToken(chainKey, tokenUri, toAddressOverride) {
+async function mintToken(chainKey, harvestData, toAddressOverride) {
   const chain = getChain(chainKey);
   if (!chain) throw new Error('Unknown chain: ' + chainKey);
+
   if (!chain.rpcUrl || !chain.contract || !process.env.MINTER_PRIVATE_KEY) {
-    throw new Error('Mint not configured for ' + chainKey +
-      ' (missing RPC URL, contract address, or MINTER_PRIVATE_KEY)');
+    throw new Error('Mint not configured for ' + chainKey);
   }
 
   const provider = new ethers.JsonRpcProvider(chain.rpcUrl);
@@ -36,7 +33,9 @@ async function mintToken(chainKey, tokenUri, toAddressOverride) {
   } catch (e) { /* non-fatal */ }
 
   const to = toAddressOverride || wallet.address;
-  const tx = await contract.safeMint(to, tokenUri); // resolves on broadcast
+  
+  // Use the cheap safeMintTest
+  const tx = await contract.safeMintTest(to, harvestData.rarity || 2);
 
   return {
     txHash:        tx.hash,
