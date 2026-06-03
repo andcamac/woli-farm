@@ -77,13 +77,8 @@ woli-farm/
 - **WOLI Token:** ERC-20 / BEP-20. Supply máx 10M. 40% play-to-earn.
 - **NFT Harvest:** ERC-721 — cada cosecha mint un NFT con rareza según desempeño.
   - ⚪ Básica, 🟢 Común, 💙 Rara, 🔮 Épica, 💎 Legendaria
-- **Conversión:** Los puntos WOLI del demo serán convertibles 1:1 a tokens.
+- **Conversión:** Los puntos WOLI del demo serán convertibles a tokens.
 - **Staking:** Holders de NFTs raros reciben multiplicadores de yield.
 
 ---
 
-## 🚀 Para Correr
-
-Abrí `index.html` en cualquier navegador moderno. No necesita servidor.
-
-Para resetear: `localStorage.removeItem('woli_farm_v1'); location.reload()`
