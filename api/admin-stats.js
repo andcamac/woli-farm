@@ -6,18 +6,20 @@
    Admin-only: requires a valid Firebase ID token
    whose uid exists in the admins collection.
 
-   This is the backend the Session-2 dashboard
-   (admin.html) will consume.
+   INDEX-FREE: derives every number from plain
+   document reads (no collection-group queries,
+   no aggregation queries) so it works without any
+   manually-created Firestore indexes.
 ═══════════════════════════════════════════ */
 'use strict';
 
 const { getAdmin } = require('./_lib/firebaseAdmin');
 const { verifyToken, isAdmin } = require('./_lib/auth');
 
-// How many user docs to read for token-sum aggregation. Counts (users,
-// harvests, minted) use Firestore aggregation queries and are exact
-// regardless of this cap.
-const USER_READ_CAP = 1000;
+// How many user docs to scan. Counts cover this many users; for a demo /
+// small player base this is effectively the full set. For large scale we'd
+// switch to maintained counters (a later optimization).
+const USER_READ_CAP   = 2000;
 const RECENT_LOG_LIMIT = 50;
 
 module.exports = async (req, res) => {
@@ -40,15 +42,9 @@ module.exports = async (req, res) => {
   const db = admin.firestore();
 
   try {
-    // ── Exact counts via aggregation queries ──
-    const [usersCount, harvestsCount, mintedCount] = await Promise.all([
-      db.collection('users').count().get(),
-      db.collectionGroup('harvests').count().get(),
-      db.collectionGroup('harvests').where('minted', '==', true).count().get(),
-    ]);
-
-    // ── Token + cycle sums (read capped set of user docs) ──
+    // ── Read user docs (single, index-free query) ──
     const usersSnap = await db.collection('users').limit(USER_READ_CAP).get();
+
     let woliBalance = 0, woliEarned = 0, woliSpent = 0, cyclesCompleted = 0;
     usersSnap.forEach((d) => {
       const u  = d.data();
@@ -59,38 +55,61 @@ module.exports = async (req, res) => {
       woliSpent       += Number(gs.coinsSpent || 0);
     });
 
-    // ── Recent audit feed (with IP) ──
-    const logsSnap = await db
-      .collection('audit_logs')
-      .orderBy('timestamp', 'desc')
-      .limit(RECENT_LOG_LIMIT)
-      .get();
+    // ── Harvest + minted counts via each user's own harvests subcollection ──
+    // A direct subcollection read with a single-field projection needs NO
+    // manual index (unlike a collection-group query).
+    let totalHarvests = 0, totalMinted = 0;
+    const perUser = await Promise.all(
+      usersSnap.docs.map(async (d) => {
+        try {
+          const h = await d.ref.collection('harvests').select('minted').get();
+          let minted = 0;
+          h.forEach((x) => { if (x.get('minted') === true) minted++; });
+          return { total: h.size, minted };
+        } catch (e) {
+          return { total: 0, minted: 0 };
+        }
+      })
+    );
+    perUser.forEach((c) => { totalHarvests += c.total; totalMinted += c.minted; });
 
-    const recentLogs = logsSnap.docs.map((d) => {
-      const l = d.data();
-      return {
-        id:        d.id,
-        uid:       l.uid,
-        email:     l.email || null,
-        action:    l.action,
-        ip:        l.ip || null,
-        geo:       l.geo || null,
-        userAgent: l.userAgent || null,
-        meta:      l.meta || {},
-        timestamp: l.timestamp ? l.timestamp.toMillis() : null,
-      };
-    });
+    // ── Recent audit feed (isolated so a feed hiccup can't blank the cards) ──
+    let recentLogs = [];
+    try {
+      const logsSnap = await db
+        .collection('audit_logs')
+        .orderBy('timestamp', 'desc')
+        .limit(RECENT_LOG_LIMIT)
+        .get();
+
+      recentLogs = logsSnap.docs.map((d) => {
+        const l = d.data();
+        return {
+          id:        d.id,
+          uid:       l.uid,
+          email:     l.email || null,
+          action:    l.action,
+          ip:        l.ip || null,
+          geo:       l.geo || null,
+          userAgent: l.userAgent || null,
+          meta:      l.meta || {},
+          timestamp: l.timestamp ? l.timestamp.toMillis() : null,
+        };
+      });
+    } catch (e) {
+      // Leave recentLogs empty; totals still return.
+    }
 
     res.status(200).json({
       totals: {
-        users:             usersCount.data().count,
-        harvests:          harvestsCount.data().count,
-        nftsMinted:        mintedCount.data().count,
+        users:             usersSnap.size,
+        harvests:          totalHarvests,
+        nftsMinted:        totalMinted,
         cyclesCompleted,
         woliInCirculation: woliBalance,
         woliEarned,
         woliSpent,
-        usersSampled:      usersSnap.size, // transparency: sums cover this many docs
+        usersSampled:      usersSnap.size,
       },
       recentLogs,
       generatedAt: Date.now(),
