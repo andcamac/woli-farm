@@ -88,6 +88,11 @@ header{display:flex;align-items:center;justify-content:space-between;padding:1.2
 
 .btn-mint{width:100%;padding:8px;background:linear-gradient(135deg,rgba(77,184,122,.15),rgba(77,184,122,.08));color:rgba(143,212,168,.5);border:1px solid rgba(77,184,122,.2);border-radius:8px;font-family:var(--font-m);font-size:.7rem;cursor:not-allowed;letter-spacing:.04em;position:relative}
 .btn-mint::after{content:'Sepolia testnet — Coming soon';display:block;font-size:.6rem;opacity:.6;margin-top:2px}
+.btn-mint.ready{cursor:pointer;color:var(--g4,#4caf78);border-color:rgba(77,184,122,.5);background:linear-gradient(135deg,rgba(77,184,122,.22),rgba(77,184,122,.10))}
+.btn-mint.ready:hover{background:linear-gradient(135deg,rgba(77,184,122,.34),rgba(77,184,122,.16));transform:translateY(-1px)}
+.btn-mint.ready::after{content:'Sepolia testnet'}
+.btn-mint.minted{cursor:pointer;display:block;text-decoration:none;color:#f0d080;border-color:rgba(200,168,75,.5);background:linear-gradient(135deg,rgba(200,168,75,.18),rgba(200,168,75,.08))}
+.btn-mint.minted::after{content:'confirmando en cadena ↗';color:#f0d080;opacity:.7}
 
 /* Empty state */
 .empty{text-align:center;padding:4rem 1.5rem;max-width:480px;margin:0 auto}
@@ -376,7 +381,13 @@ function renderCard(h) {
           <div class="stat-row"><span class="stat-label">WOLI</span><span class="stat-value gold">+${h.coinsEarned || 0}</span></div>
         </div>
         <div class="card-date">📅 ${date}${!isMine ? ` · 👤 ${h.ownerName || 'Anon'}` : ''}</div>
-        <button class="btn-mint" disabled title="Mint to Sepolia testnet (Coming soon)">🔗 Mint as NFT</button>
+        ${
+          h.minted
+            ? `<a class="btn-mint minted" href="${h.explorerUrl || '#'}" target="_blank" rel="noopener">✓ Minteado${h.onChainTokenId ? ' · token #' + h.onChainTokenId : ''}</a>`
+            : (isMine
+                ? `<button class="btn-mint ready" id="mint-${h.id}" onclick="mintHarvest('${h.id}')">🔗 Mint as NFT</button>`
+                : `<button class="btn-mint" disabled title="Solo el dueño puede mintear">🔒 Mint as NFT</button>`)
+        }
       </div>
     </div>
   `;
@@ -424,6 +435,39 @@ async function toggleVisibility(harvestId, currentlyPublic) {
     renderPage();
   } catch (e) {
     showToast('Error: ' + e.message);
+  }
+}
+
+// ── MINT NFT (Sepolia) ──
+async function mintHarvest(harvestId) {
+  const user = auth.currentUser;
+  if (!user) { showToast('Iniciá sesión primero.'); return; }
+  const btn = document.getElementById('mint-' + harvestId);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Minteando...'; }
+
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch('/api/mint', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ harvestId, chain: 'sepolia' })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || data.error || ('HTTP ' + res.status));
+
+    const h = _harvests.find(x => x.id === harvestId);
+    if (h) {
+      h.minted = true;
+      h.onChainTokenId = data.tokenId;
+      h.mintTxHash = data.txHash;
+      h.explorerUrl = data.explorerUrl;
+      h.chain = data.chain;
+    }
+    showToast(data.already ? 'Esta cosecha ya estaba minteada.' : '🔗 ¡Minteado! Tx enviada a Sepolia.');
+    renderPage();
+  } catch (e) {
+    showToast('Error al mintear: ' + e.message);
+    if (btn) { btn.disabled = false; btn.innerHTML = '🔗 Mint as NFT'; }
   }
 }
 
