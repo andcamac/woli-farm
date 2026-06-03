@@ -63,6 +63,29 @@ html,body{min-height:100%;font-family:var(--font-b);background:var(--g1);color:v
 .mint-banner a{color:var(--gold2);text-decoration:none;font-family:var(--font-m);font-size:.8rem}
 .mint-banner a:hover{text-decoration:underline}
 .mint-banner.err{border-color:rgba(224,84,84,.4);background:rgba(224,84,84,.1);color:#ff9a9a}
+.modal-overlay{position:fixed;inset:0;z-index:50;background:rgba(4,12,8,.72);display:none;align-items:center;justify-content:center;padding:1.2rem}
+.modal{position:relative;width:100%;max-width:560px;background:linear-gradient(180deg,#10301a,#0a1f10);border:1px solid rgba(200,168,75,.3);border-radius:18px;padding:1.4rem;box-shadow:0 24px 60px rgba(0,0,0,.5);animation:rise .25s ease both}
+.modal h3{font-family:var(--font-d);font-size:1.2rem;color:var(--cream);margin-bottom:1rem}
+.modal-x{position:absolute;top:.9rem;right:1rem;background:none;border:none;color:rgba(245,240,232,.5);font-size:1.1rem;cursor:pointer;line-height:1}
+.modal-x:hover{color:var(--red)}
+.modal-grid{display:grid;grid-template-columns:200px 1fr;gap:1.1rem}
+.nft-preview{width:200px;height:200px;border-radius:14px;overflow:hidden;background:#0a1f10;border:1px solid var(--line)}
+.nft-preview svg{display:block;width:100%;height:100%}
+.trait-list{display:grid;grid-template-columns:auto 1fr;gap:.22rem .8rem;font-size:.78rem;margin-bottom:.9rem}
+.trait-list dt{color:rgba(245,240,232,.5);font-family:var(--font-m);font-size:.66rem}
+.trait-list dd{margin:0;color:var(--cream)}
+.cost-box{border:1px solid rgba(200,168,75,.25);background:rgba(200,168,75,.06);border-radius:12px;padding:.7rem .8rem}
+.cost-title{font-family:var(--font-m);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold2);margin-bottom:.5rem}
+.cost-row{display:flex;justify-content:space-between;gap:.6rem;font-size:.76rem;padding:.18rem 0;color:rgba(245,240,232,.8)}
+.cost-row b{color:var(--cream);font-family:var(--font-m);font-weight:500}
+.cost-flag{margin-top:.5rem;font-size:.72rem;font-weight:500}
+.cost-flag.ok{color:var(--g5)}
+.cost-flag.bad{color:var(--red)}
+.cost-note{margin-top:.3rem;font-size:.62rem;color:rgba(245,240,232,.4)}
+.modal-actions{display:flex;gap:.6rem;justify-content:flex-end;margin-top:1.2rem}
+.modal-result{margin-top:.8rem;font-size:.8rem}
+.modal-result a{color:var(--gold2)}
+@media(max-width:520px){.modal-grid{grid-template-columns:1fr}.nft-preview{width:100%;height:240px}}
 /* NFT gallery */
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:2.6rem}
 .nft{background:rgba(15,45,24,.5);border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:transform .15s,border-color .15s;animation:rise .5s ease both}
@@ -205,7 +228,7 @@ tbody tr:hover{background:rgba(77,184,122,.05)}
           <div><b id="me-name">—</b></div>
           <span id="me-email"></span>
         </div>
-        <button class="btn btn-gold" id="btn-amint" onclick="adminMint()">🎲 NFT aleatorio</button>
+        <button class="btn btn-gold" id="btn-amint" onclick="genPlant()">🎲 Generar planta</button>
         <button class="btn" id="btn-refresh" onclick="refresh()">↻ Actualizar</button>
         <button class="btn btn-ghost" onclick="signOut()">Salir</button>
       </div>
@@ -253,6 +276,28 @@ tbody tr:hover{background:rgba(77,184,122,.05)}
 
     <!-- Admin mint result -->
     <div class="mint-banner" id="mint-banner"></div>
+
+    <div class="modal-overlay" id="mint-modal">
+      <div class="modal">
+        <button class="modal-x" onclick="closeMintModal()" aria-label="Cerrar">✕</button>
+        <h3>Vista previa del NFT</h3>
+        <div class="modal-grid">
+          <div class="nft-preview" id="nft-preview"></div>
+          <div>
+            <dl class="trait-list" id="trait-list"></dl>
+            <div class="cost-box">
+              <div class="cost-title">Costo del mint · gas fees</div>
+              <div id="cost-body">Calculando gas…</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" onclick="genPlant()">🔄 Regenerar</button>
+          <button class="btn btn-gold" id="btn-confirm-mint" onclick="mintPending()">🔗 Mintear</button>
+        </div>
+        <div class="modal-result" id="modal-result"></div>
+      </div>
+    </div>
 
     <!-- NFT gallery -->
     <div class="sec-head">
@@ -482,37 +527,107 @@ function esc(s) {
     ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
 // ── Admin: mint a random rarity-based NFT ──
-async function adminMint() {
-  const user = auth.currentUser;
-  if (!user) return;
-  const btn = document.getElementById('btn-amint');
-  const banner = document.getElementById('mint-banner');
-  const orig = btn.textContent;
-  btn.disabled = true; btn.textContent = '🎲 Minteando…';
+// ── Admin test mint: generate → preview + cost → mint ──
+const RARITY_C = [
+  { min: 90, label: '💎 Legendaria', color: '#f0d080', level: 4 },
+  { min: 75, label: '🔮 Épica',      color: '#c080f0', level: 3 },
+  { min: 55, label: '💙 Rara',       color: '#60a0f0', level: 2 },
+  { min: 30, label: '🟢 Común',      color: '#4caf78', level: 1 },
+  { min: 0,  label: '⚪ Básica',     color: '#888888', level: 0 },
+];
+const rintC  = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const clampC = (n, a, b) => Math.max(a, Math.min(b, n));
 
+function genHarvest() {
+  const pct = rintC(0, 100);
+  const t = RARITY_C.find((r) => pct >= r.min) || RARITY_C[RARITY_C.length - 1];
+  return {
+    tokenId:     '????',
+    rarityLabel: t.label,
+    rarityColor: t.color,
+    rarityLevel: t.level,
+    rarityPct:   pct,
+    perfectDays: clampC(Math.round((pct / 100) * 7) + rintC(-1, 1), 0, 7),
+    health:      clampC(Math.round(45 + pct * 0.5) + rintC(-8, 8), 10, 100),
+    maxStreak:   clampC(Math.round((pct / 100) * 7) + rintC(-1, 1), 0, 7),
+    coinsEarned: clampC(Math.round((pct / 100) * 900) + rintC(-40, 40), 0, 950),
+  };
+}
+
+let _pendingNft = null;
+
+function genPlant() {
+  _pendingNft = genHarvest();
+  document.getElementById('nft-preview').innerHTML = WoliNFT.buildSvg(_pendingNft);
+  renderTraits(_pendingNft);
+  document.getElementById('modal-result').innerHTML = '';
+  const cm = document.getElementById('btn-confirm-mint');
+  cm.disabled = false; cm.textContent = '🔗 Mintear';
+  document.getElementById('mint-modal').style.display = 'flex';
+  fetchQuote();
+}
+
+function closeMintModal() {
+  document.getElementById('mint-modal').style.display = 'none';
+}
+
+function renderTraits(h) {
+  document.getElementById('trait-list').innerHTML =
+    `<dt>Rareza</dt><dd>${esc(h.rarityLabel)} (${h.rarityPct}%)</dd>` +
+    `<dt>Salud</dt><dd>${h.health}%</dd>` +
+    `<dt>Días perfectos</dt><dd>${h.perfectDays}/7</dd>` +
+    `<dt>Racha máx</dt><dd>${h.maxStreak}</dd>` +
+    `<dt>WOLI</dt><dd>${h.coinsEarned}</dd>`;
+}
+
+async function fetchQuote() {
+  const box = document.getElementById('cost-body');
+  const cm  = document.getElementById('btn-confirm-mint');
+  box.innerHTML = 'Calculando gas…';
   try {
-    const token = await user.getIdToken();
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch('/api/mint-quote?chain=sepolia', { headers: { 'Authorization': 'Bearer ' + token } });
+    const c = await res.json();
+    if (!res.ok) throw new Error(c.detail || c.error || ('HTTP ' + res.status));
+    box.innerHTML =
+      `<div class="cost-row"><span>Gas estimado</span><b>${Number(c.gasLimit).toLocaleString()}</b></div>` +
+      `<div class="cost-row"><span>Precio del gas</span><b>${c.gasPriceGwei.toFixed(2)} gwei</b></div>` +
+      `<div class="cost-row"><span>Costo estimado</span><b>${Number(c.estCostEth).toFixed(8)} ${esc(c.currency)}</b></div>` +
+      `<div class="cost-row"><span>Saldo minter</span><b>${Number(c.minterBalanceEth).toFixed(5)} ${esc(c.currency)}</b></div>` +
+      `<div class="cost-flag ${c.enough ? 'ok' : 'bad'}">${c.enough ? '✓ Saldo suficiente para mintear' : '⚠ Saldo insuficiente'}</div>` +
+      `<div class="cost-note">Testnet — sin valor monetario real</div>`;
+    cm.disabled = !c.enough;
+  } catch (e) {
+    box.innerHTML = `<div class="cost-flag bad">No se pudo estimar el gas: ${esc(e.message)}</div>`;
+  }
+}
+
+async function mintPending() {
+  if (!_pendingNft) return;
+  const cm = document.getElementById('btn-confirm-mint');
+  const result = document.getElementById('modal-result');
+  cm.disabled = true; cm.textContent = '🔗 Minteando…';
+  try {
+    const token = await auth.currentUser.getIdToken();
     const res = await fetch('/api/admin-mint', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: '{}'
+      body: JSON.stringify({ harvest: _pendingNft }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || data.error || ('HTTP ' + res.status));
-
     const h = data.harvest, m = data.mint;
+    const banner = document.getElementById('mint-banner');
     banner.className = 'mint-banner';
     banner.style.display = 'block';
-    banner.innerHTML = `✅ NFT aleatorio minteado — <b>${esc(h.rarityLabel)}</b> (${h.rarityPct}%) · ` +
+    banner.innerHTML = `✅ NFT minteado — <b>${esc(h.rarityLabel)}</b> (${h.rarityPct}%) · ` +
       `token #${esc(m.tokenId || '?')} · ` +
       `<a href="${esc(m.explorerUrl)}" target="_blank" rel="noopener">ver en Etherscan ↗</a>`;
+    closeMintModal();
     refresh();
   } catch (e) {
-    banner.className = 'mint-banner err';
-    banner.style.display = 'block';
-    banner.textContent = 'Error al mintear: ' + e.message;
-  } finally {
-    btn.disabled = false; btn.textContent = orig;
+    result.innerHTML = `<span style="color:var(--red)">Error al mintear: ${esc(e.message)}</span>`;
+    cm.disabled = false; cm.textContent = '🔗 Mintear';
   }
 }
 
