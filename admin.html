@@ -55,6 +55,13 @@ html,body{min-height:100%;font-family:var(--font-b);background:var(--g1);color:v
 .btn:active{transform:none}
 .btn-ghost{background:transparent;color:rgba(245,240,232,.5)}
 .btn-ghost:hover{color:var(--red);border-color:rgba(224,84,84,.3)}
+.btn-gold{border-color:rgba(200,168,75,.5);background:linear-gradient(135deg,rgba(200,168,75,.22),rgba(200,168,75,.08));color:var(--gold2)}
+.btn-gold:hover{background:linear-gradient(135deg,rgba(200,168,75,.34),rgba(200,168,75,.16));border-color:var(--gold)}
+.btn-gold:disabled{opacity:.6;cursor:wait}
+.mint-banner{display:none;margin:0 0 1.6rem;padding:.9rem 1.1rem;border-radius:12px;border:1px solid rgba(200,168,75,.35);background:rgba(200,168,75,.08);font-size:.85rem;color:var(--cream);animation:rise .4s ease both}
+.mint-banner a{color:var(--gold2);text-decoration:none;font-family:var(--font-m);font-size:.8rem}
+.mint-banner a:hover{text-decoration:underline}
+.mint-banner.err{border-color:rgba(224,84,84,.4);background:rgba(224,84,84,.1);color:#ff9a9a}
 
 /* ── Section heading ── */
 .sec-head{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 1rem;gap:1rem}
@@ -176,6 +183,7 @@ tbody tr:hover{background:rgba(77,184,122,.05)}
           <div><b id="me-name">—</b></div>
           <span id="me-email"></span>
         </div>
+        <button class="btn btn-gold" id="btn-amint" onclick="adminMint()">🎲 NFT aleatorio</button>
         <button class="btn" id="btn-refresh" onclick="refresh()">↻ Actualizar</button>
         <button class="btn btn-ghost" onclick="signOut()">Salir</button>
       </div>
@@ -220,6 +228,9 @@ tbody tr:hover{background:rgba(77,184,122,.05)}
         <div class="sub">en la tienda</div>
       </div>
     </div>
+
+    <!-- Admin mint result -->
+    <div class="mint-banner" id="mint-banner"></div>
 
     <!-- Audit feed -->
     <div class="sec-head">
@@ -366,6 +377,41 @@ function esc(s) {
   return String(s).replace(/[&<>"']/g, c =>
     ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
+// ── Admin: mint a random rarity-based NFT ──
+async function adminMint() {
+  const user = auth.currentUser;
+  if (!user) return;
+  const btn = document.getElementById('btn-amint');
+  const banner = document.getElementById('mint-banner');
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '🎲 Minteando…';
+
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch('/api/admin-mint', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: '{}'
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || data.error || ('HTTP ' + res.status));
+
+    const h = data.harvest, m = data.mint;
+    banner.className = 'mint-banner';
+    banner.style.display = 'block';
+    banner.innerHTML = `✅ NFT aleatorio minteado — <b>${esc(h.rarityLabel)}</b> (${h.rarityPct}%) · ` +
+      `token #${esc(m.tokenId || '?')} · ` +
+      `<a href="${esc(m.explorerUrl)}" target="_blank" rel="noopener">ver en Etherscan ↗</a>`;
+    refresh();
+  } catch (e) {
+    banner.className = 'mint-banner err';
+    banner.style.display = 'block';
+    banner.textContent = 'Error al mintear: ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+
 async function signOut() { cleanup(); await auth.signOut(); location.href = 'auth.html'; }
 </script>
 
