@@ -1,0 +1,136 @@
+/* ═══════════════════════════════════════════
+   POST /api/admin-mint
+   Woli Farm · admin-only random NFT mint
+   ═══════════════════════════════════════════
+   Generates a random harvest using the SAME rarity
+   tiers as the game and mints it on-chain. Admin-only:
+   requires a valid Firebase ID token whose uid exists
+   in the admins collection. Never callable by players.
+═══════════════════════════════════════════ */
+'use strict';
+
+const { getAdmin } = require('./_lib/firebaseAdmin');
+const { verifyToken, isAdmin } = require('./_lib/auth');
+const { getClientIp, getGeo } = require('./_lib/ip');
+const { buildTokenUri } = require('./_lib/metadata');
+const { mintToken } = require('./_lib/minter');
+
+// Mirror of CFG.RARITY in js/config.js — keep in sync with the game.
+const RARITY = [
+  { min: 90, label: '💎 Legendaria', color: '#f0d080' },
+  { min: 75, label: '🔮 Épica',      color: '#c080f0' },
+  { min: 55, label: '💙 Rara',       color: '#60a0f0' },
+  { min: 30, label: '🟢 Común',      color: '#4caf78' },
+  { min: 0,  label: '⚪ Básica',     color: '#888888' },
+];
+
+const rint  = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+
+// Build a plausible harvest whose attributes correlate with a random rarity %.
+function randomHarvest() {
+  const pct  = rint(0, 100);
+  const tier = RARITY.find((r) => pct >= r.min) || RARITY[RARITY.length - 1];
+  return {
+    rarityLabel: tier.label,
+    rarityColor: tier.color,
+    rarityPct:   pct,
+    perfectDays: clamp(Math.round((pct / 100) * 7) + rint(-1, 1), 0, 7),
+    health:      clamp(Math.round(45 + pct * 0.5) + rint(-8, 8), 10, 100),
+    maxStreak:   clamp(Math.round((pct / 100) * 7) + rint(-1, 1), 0, 7),
+    coinsEarned: clamp(Math.round((pct / 100) * 900) + rint(-40, 40), 0, 950),
+  };
+}
+
+module.exports = async (req, res) => {
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+  const decoded = await verifyToken(req);
+  if (!decoded) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+  if (!(await isAdmin(decoded.uid))) {
+    res.status(403).json({ error: 'Forbidden — admin only' });
+    return;
+  }
+
+  const admin = getAdmin();
+  const db = admin.firestore();
+
+  async function audit(action, meta) {
+    try {
+      await db.collection('audit_logs').add({
+        uid:       decoded.uid,
+        email:     decoded.email || null,
+        action,
+        ip:        getClientIp(req),
+        geo:       getGeo(req),
+        userAgent: String(req.headers['user-agent'] || '').slice(0, 400),
+        meta:      meta || {},
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (e) { /* swallow */ }
+  }
+
+  const chainKey = 'sepolia';
+  const h = randomHarvest();
+
+  // Sequential display id under the admin's own harvests subcollection.
+  const harvestsRef = db.collection('users').doc(decoded.uid).collection('harvests');
+  let displayId = 1;
+  try {
+    const snap = await harvestsRef.get();
+    displayId = snap.size + 1;
+  } catch (e) { /* default 1 */ }
+
+  await audit('mint_request', { admin: true, rarity: h.rarityLabel, chain: chainKey });
+
+  try {
+    const tokenUri = buildTokenUri({ ...h, tokenId: displayId });
+    const result = await mintToken(chainKey, tokenUri);
+
+    await harvestsRef.add({
+      tokenId:         displayId,
+      ownerUid:        decoded.uid,
+      ownerName:       decoded.email ? decoded.email.split('@')[0] : 'admin',
+      harvestedAt:     admin.firestore.FieldValue.serverTimestamp(),
+      stageIdx:        7,
+      health:          h.health,
+      perfectDays:     h.perfectDays,
+      maxStreak:       h.maxStreak,
+      coinsEarned:     h.coinsEarned,
+      harvestBonus:    0,
+      rarityLabel:     h.rarityLabel,
+      rarityColor:     h.rarityColor,
+      rarityPct:       h.rarityPct,
+      isPublic:        false,
+      adminGenerated:  true,            // flag: not a real player harvest
+      minted:          true,
+      mintStatus:      'submitted',
+      chain:           result.chain,
+      tokenStandard:   result.tokenStandard,
+      contractAddress: result.contract,
+      onChainTokenId:  result.tokenId,
+      mintedTo:        result.to,
+      mintTxHash:      result.txHash,
+      explorerUrl:     result.explorerUrl,
+      mintedAt:        admin.firestore.FieldValue.serverTimestamp(),
+      dayHistory:      [],
+    });
+
+    await audit('mint_success', {
+      admin: true, rarity: h.rarityLabel, chain: chainKey,
+      txHash: result.txHash, tokenId: result.tokenId,
+    });
+
+    res.status(200).json({ ok: true, harvest: { ...h, tokenId: displayId }, mint: result });
+  } catch (e) {
+    await audit('mint_failed', { admin: true, error: String(e && e.message).slice(0, 180) });
+    res.status(500).json({ error: 'Admin mint failed', detail: e && e.message });
+  }
+};
+
+module.exports.config = { maxDuration: 30 };

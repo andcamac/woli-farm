@@ -45,33 +45,50 @@ module.exports = async (req, res) => {
     // ── Read user docs (single, index-free query) ──
     const usersSnap = await db.collection('users').limit(USER_READ_CAP).get();
 
-    let woliBalance = 0, woliEarned = 0, woliSpent = 0, cyclesCompleted = 0;
+    // Players each start with this many WOLI (CFG.START_COINS / ensureUserDoc).
+    const START_COINS = 80;
+
+    let woliBalance = 0, cyclesCompleted = 0, inProgressEarned = 0;
     usersSnap.forEach((d) => {
       const u  = d.data();
       const gs = u.gameState || {};
       woliBalance     += Number(u.coins || 0);
       cyclesCompleted += Number(u.totalCyclesCompleted || 0);
-      woliEarned      += Number(gs.coinsEarned || 0);
-      woliSpent       += Number(gs.coinsSpent || 0);
+      // gameState.coinsEarned resets each cycle, so only count it while a
+      // cycle is actually in progress (its earnings aren't in a harvest yet).
+      if (gs.cycleActive === true) inProgressEarned += Number(gs.coinsEarned || 0);
     });
 
-    // ── Harvest + minted counts via each user's own harvests subcollection ──
-    // A direct subcollection read with a single-field projection needs NO
-    // manual index (unlike a collection-group query).
-    let totalHarvests = 0, totalMinted = 0;
+    // ── Harvest counts + global earned via each user's harvests subcollection ──
+    // (direct subcollection reads need NO manual index)
+    let totalHarvests = 0, totalMinted = 0, harvestEarned = 0;
     const perUser = await Promise.all(
       usersSnap.docs.map(async (d) => {
         try {
-          const h = await d.ref.collection('harvests').select('minted').get();
-          let minted = 0;
-          h.forEach((x) => { if (x.get('minted') === true) minted++; });
-          return { total: h.size, minted };
+          const h = await d.ref.collection('harvests')
+            .select('minted', 'coinsEarned', 'adminGenerated').get();
+          let minted = 0, earned = 0;
+          h.forEach((x) => {
+            if (x.get('minted') === true) minted++;
+            // Exclude admin-generated test NFTs from player economy figures.
+            if (x.get('adminGenerated') !== true) earned += Number(x.get('coinsEarned') || 0);
+          });
+          return { total: h.size, minted, earned };
         } catch (e) {
-          return { total: 0, minted: 0 };
+          return { total: 0, minted: 0, earned: 0 };
         }
       })
     );
-    perUser.forEach((c) => { totalHarvests += c.total; totalMinted += c.minted; });
+    perUser.forEach((c) => {
+      totalHarvests += c.total;
+      totalMinted   += c.minted;
+      harvestEarned += c.earned;
+    });
+
+    // Global lifetime earned = all harvested cycles + the current in-progress cycle.
+    const woliEarned = harvestEarned + inProgressEarned;
+    // Accounting identity: balance = start + earned - spent  →  spent = start + earned - balance.
+    const woliSpent = Math.max(0, START_COINS * usersSnap.size + woliEarned - woliBalance);
 
     // ── Recent audit feed (isolated so a feed hiccup can't blank the cards) ──
     let recentLogs = [];
