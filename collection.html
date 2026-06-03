@@ -222,7 +222,9 @@ function renderPage() {
 
   // Filter and sort
   let filtered = _harvests;
-  if (_currentFilter !== 'all') {
+  if (_currentFilter === 'minted') {
+    filtered = filtered.filter(h => h.minted === true);
+  } else if (_currentFilter !== 'all') {
     filtered = filtered.filter(h => h.rarityLabel && h.rarityLabel.toLowerCase().includes(_currentFilter.toLowerCase()));
   }
 
@@ -264,6 +266,7 @@ function renderPage() {
 
     <div class="filters" style="padding-top:0">
       <button class="filter-btn ${_currentFilter==='all'?'active':''}" onclick="setFilter('all')">Todas</button>
+      <button class="filter-btn ${_currentFilter==='minted'?'active':''}" onclick="setFilter('minted')">🔗 Minteados</button>
       <button class="filter-btn ${_currentFilter==='legendaria'?'active':''}" onclick="setFilter('legendaria')">💎 Legendaria</button>
       <button class="filter-btn ${_currentFilter==='épica'?'active':''}" onclick="setFilter('épica')">🔮 Épica</button>
       <button class="filter-btn ${_currentFilter==='rara'?'active':''}" onclick="setFilter('rara')">💙 Rara</button>
