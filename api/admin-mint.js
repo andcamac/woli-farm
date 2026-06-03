@@ -38,6 +38,22 @@ function randomHarvest() {
   };
 }
 
+function sanitizeHarvest(x) {
+  if (!x || typeof x !== 'object') return null;
+  const lvl = clamp(Math.round(Number(x.rarityLevel)), 0, 4);
+  const tier = RARITY.find((r) => r.level === lvl) || RARITY[RARITY.length - 1];
+  return {
+    rarityLabel: tier.label,
+    rarityColor: tier.color,
+    rarityLevel: lvl,
+    rarityPct:   clamp(Math.round(Number(x.rarityPct) || 0), 0, 100),
+    perfectDays: clamp(Math.round(Number(x.perfectDays) || 0), 0, 7),
+    health:      clamp(Math.round(Number(x.health) || 0), 0, 100),
+    maxStreak:   clamp(Math.round(Number(x.maxStreak) || 0), 0, 7),
+    coinsEarned: clamp(Math.round(Number(x.coinsEarned) || 0), 0, 5000),
+  };
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
@@ -73,7 +89,11 @@ module.exports = async (req, res) => {
   }
 
   const chainKey = 'sepolia';
-  const h = randomHarvest();
+
+  let body = req.body;
+  if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
+  body = body || {};
+  const h = sanitizeHarvest(body.harvest) || randomHarvest();
 
   // Get sequential display ID
   const harvestsRef = db.collection('users').doc(decoded.uid).collection('harvests');
