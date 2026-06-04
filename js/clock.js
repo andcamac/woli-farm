@@ -213,5 +213,6 @@ const Clock = (() => {
   }
 
   return { start, stop, getState, setState, getDayNow, getMinutesNow,
-           getHour, getDateKey, completeTask, hasActiveTask, taskTimeLeft };
+           getHour, getDateKey, completeTask, hasActiveTask, taskTimeLeft,
+           regenTasks: generateDayTasks };
 })();

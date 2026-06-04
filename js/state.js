@@ -72,27 +72,54 @@ function _writeToCloud(state) {
   }, { merge: true });
 }
 
-/* ── SAVE: localStorage inmediato + cloud debounced ── */
+/* ── SAVE: localStorage inmediato + cloud throttled ──
+   NOTA: el reloj llama saveState() cada segundo mientras el ciclo está
+   activo. La versión anterior reiniciaba el timer en cada llamada
+   (debounce), así que con ticks de 1s < 1.5s el guardado a la nube NUNCA
+   se disparaba. Ahora usamos throttle de borde de salida: el primer
+   cambio agenda una escritura garantizada en ≤1.5s y los cambios
+   posteriores actualizan la cola sin posponer la escritura. */
 function saveState(s) {
+  // Sello de tiempo monotónico para resolver conflictos local vs nube
+  s._updatedAt = Date.now();
+
   // Save local inmediato (rápido, offline support)
   try { localStorage.setItem(STATE_KEY, JSON.stringify(s)); } catch(e) {}
 
-  // Cloud save con debounce — guarda 1.5s después del último cambio
+  // Cloud save con throttle — NO reinicia el timer si ya hay uno pendiente
   _saveQueue = s;
-  if (_saveTimer) clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(() => {
-    if (_saveQueue) {
-      _writeToCloud(_saveQueue).catch(err => {
-        console.warn('Cloud save failed (using localStorage):', err.message);
-      });
+  if (!_saveTimer) {
+    _saveTimer = setTimeout(() => {
+      _saveTimer = null;
+      const q = _saveQueue;
       _saveQueue = null;
-    }
-  }, SAVE_DEBOUNCE_MS);
+      if (q) {
+        _writeToCloud(q).catch(err => {
+          console.warn('Cloud save failed (using localStorage):', err.message);
+        });
+      }
+    }, SAVE_DEBOUNCE_MS);
+  }
 }
 
-/* ── LOAD: prioriza cloud, fallback localStorage ── */
+/* ── LOAD: elige el estado MÁS RECIENTE entre nube y local ──
+   La versión anterior siempre sobrescribía localStorage con la nube. Como
+   las escrituras a la nube se estaban perdiendo (ver saveState), la nube
+   solía tener un snapshot viejo SIN la semilla recién plantada, y al
+   recargar borraba el progreso local. Ahora comparamos _updatedAt y
+   ganamos con el más nuevo (last-write-wins). */
 async function loadState() {
-  // 1. Si hay usuario logueado, intentar cargar de Firestore
+  // 1. Leer local primero
+  let local = null;
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      if (s && s.v === 1) local = s;
+    }
+  } catch (e) { /* ignore corrupt local */ }
+
+  // 2. Si hay usuario logueado, comparar con Firestore
   if (typeof firebase !== 'undefined') {
     const user = firebase.auth().currentUser;
     if (user) {
@@ -100,11 +127,18 @@ async function loadState() {
         const db = firebase.firestore();
         const doc = await db.collection('users').doc(user.uid).get();
         if (doc.exists) {
-          const data = doc.data();
-          if (data.gameState && data.gameState.v === 1) {
-            console.log('✅ Progreso cargado desde la nube');
-            try { localStorage.setItem(STATE_KEY, JSON.stringify(data.gameState)); } catch(e) {}
-            return data.gameState;
+          const data  = doc.data();
+          const cloud = (data.gameState && data.gameState.v === 1) ? data.gameState : null;
+          if (cloud) {
+            const cloudT = cloud._updatedAt || 0;
+            const localT = local ? (local._updatedAt || 0) : -1;
+            const chosen = (localT > cloudT) ? local : cloud;
+            // Sincronizar localStorage con el ganador
+            try { localStorage.setItem(STATE_KEY, JSON.stringify(chosen)); } catch(e) {}
+            console.log(localT > cloudT
+              ? '✅ Progreso local más reciente que la nube'
+              : '✅ Progreso cargado desde la nube');
+            return chosen;
           }
         }
       } catch (e) {
@@ -113,16 +147,8 @@ async function loadState() {
     }
   }
 
-  // 2. Fallback: localStorage
-  try {
-    const raw = localStorage.getItem(STATE_KEY);
-    if (!raw) return freshState();
-    const s = JSON.parse(raw);
-    if (!s || s.v !== 1) return freshState();
-    return s;
-  } catch (e) {
-    return freshState();
-  }
+  // 3. Fallback: local o estado nuevo
+  return local || freshState();
 }
 
 /* ── FORCE SAVE: úsalo en momentos críticos (cosecha, reset, plantar) ── */
@@ -132,6 +158,7 @@ function flushSave(s) {
     _saveTimer = null;
   }
   _saveQueue = null;
+  s._updatedAt = Date.now();
   try { localStorage.setItem(STATE_KEY, JSON.stringify(s)); } catch(e) {}
   return _writeToCloud(s);
 }

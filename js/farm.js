@@ -34,7 +34,16 @@ const Farm = (() => {
     S.todayOnTime    = { w: [false,false,false], f: [false] };
     S.tasks          = [];
 
-    saveState(S);
+    // Generar las tareas del Día 1 inmediatamente. Sin esto, el reloj solo
+    // las crea en la siguiente transición de día, dejando el día de siembra
+    // SIN notificaciones de riego/fertilización.
+    if (typeof Clock !== 'undefined' && Clock.regenTasks) {
+      Clock.setState(S);
+      Clock.regenTasks(S);
+    }
+
+    // Momento crítico → forzar guardado a la nube (no solo throttle).
+    flushSave(S);
     UI.log(S, '🌱 Semilla plantada. ¡Ciclo de 7 días iniciado!', 'good');
     UI.toast('¡Semilla plantada! Espera las notificaciones de riego.');
     if (typeof Audit !== 'undefined') Audit.log('plant');
@@ -110,7 +119,7 @@ const Farm = (() => {
       Shop.render(S); // refresh shop prices/balance
       if (typeof Audit !== 'undefined') Audit.log('purchase', { item: itemKey });
     }
-    saveState(S);
+    flushSave(S); // compra = cambio de saldo, persistir ya
     UI.render(S);
   }
 
@@ -123,7 +132,7 @@ const Farm = (() => {
       const bonus   = Econ.scoreHarvest(S);
       const rarity  = Econ.computeRarity(S);
       S.cycleActive = false;
-      saveState(S);
+      flushSave(S);
       spawnHarvestBurst();
 
       // Save harvest snapshot to Firestore (collection placeholder for NFT)
@@ -214,7 +223,7 @@ const Farm = (() => {
     S.coins = coins; S.seeds = seeds;
     S.water = water; S.fert  = fert;
     S.totalCyclesCompleted = total;
-    saveState(S);
+    flushSave(S);
     Clock.setState(S);
     UI.clearLog();
     UI.log(S, '🔄 Nuevo ciclo listo. ¡Planta una semilla!', 'good');
@@ -229,7 +238,7 @@ const Farm = (() => {
       S = freshState();
       S.coins = coins;
       S.totalCyclesCompleted = total;
-      saveState(S);
+      flushSave(S);
       Clock.setState(S);
       UI.clearLog();
       UI.log(S, '🔄 Reiniciado. Balance WOLI preservado.', '');
