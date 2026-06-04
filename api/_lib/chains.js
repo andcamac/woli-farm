@@ -9,7 +9,7 @@
    is already chain-agnostic.
 ═══════════════════════════════════════════ */
 'use strict';
-
+ 
 function getChains() {
   return {
     sepolia: {
@@ -23,21 +23,25 @@ function getChains() {
       explorerTx:    'https://sepolia.etherscan.io/tx/',
       explorerToken: 'https://sepolia.etherscan.io/token/',
     },
-
-    // ── Session 4 ──
-    // abstract: {
-    //   key: 'abstract', name: 'Abstract Testnet', chainId: 11124,
-    //   tokenStandard: 'ERC-721', currency: 'ETH',
-    //   rpcUrl: process.env.ABSTRACT_RPC_URL || '',
-    //   contract: process.env.WOLI_NFT_CONTRACT_ABSTRACT || '',
-    //   explorerTx: 'https://sepolia.abscan.org/tx/',
-    //   explorerToken: 'https://sepolia.abscan.org/token/',
-    // },
+ 
+    // ── Session 4: Abstract (ZK Stack / zkSync Era — needs zksync-ethers) ──
+    abstract: {
+      key:           'abstract',
+      name:          'Abstract Testnet',
+      chainId:       11124,
+      tokenStandard: 'ERC-721',
+      currency:      'ETH',
+      zksync:        true,
+      rpcUrl:        process.env.ABSTRACT_RPC_URL || 'https://api.testnet.abs.xyz',
+      contract:      process.env.WOLI_NFT_CONTRACT_ABSTRACT || '',
+      explorerTx:    'https://sepolia.abscan.org/tx/',
+      explorerToken: 'https://sepolia.abscan.org/token/',
+    },
   };
 }
-
+ 
 function getChain(key) {
   return getChains()[key] || null;
 }
-
+ 
 module.exports = { getChains, getChain };
