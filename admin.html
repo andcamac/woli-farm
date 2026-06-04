@@ -228,7 +228,7 @@ tbody tr:hover{background:rgba(77,184,122,.05)}
           <div><b id="me-name">—</b></div>
           <span id="me-email"></span>
         </div>
-        <button class="btn btn-gold" id="btn-amint" onclick="genPlant()">🎲 Generar planta</button>
+        <button class="btn btn-gold" id="btn-amint" onclick="openChainPicker()">🎲 Generar planta</button>
         <button class="btn" id="btn-refresh" onclick="refresh()">↻ Actualizar</button>
         <button class="btn btn-ghost" onclick="signOut()">Salir</button>
       </div>
@@ -274,6 +274,20 @@ tbody tr:hover{background:rgba(77,184,122,.05)}
       </div>
     </div>
 
+    <!-- Network picker (shown BEFORE preview/mint) -->
+    <div class="modal-overlay" id="chain-modal">
+      <div class="modal" style="max-width:420px">
+        <button class="modal-x" onclick="closeChainPicker()" aria-label="Cerrar">✕</button>
+        <h3>Seleccionar red (testnet)</h3>
+        <p style="font-size:.82rem;color:var(--cream);opacity:.8;margin:.2rem 0 1rem">
+          Elegí en qué red minteará el NFT. Solo se listan las redes configuradas.
+        </p>
+        <div id="chain-list" style="display:flex;flex-direction:column;gap:.6rem">
+          Cargando redes…
+        </div>
+      </div>
+    </div>
+
     <!-- Admin mint result -->
     <div class="mint-banner" id="mint-banner"></div>
 
@@ -282,12 +296,9 @@ tbody tr:hover{background:rgba(77,184,122,.05)}
         <button class="modal-x" onclick="closeMintModal()" aria-label="Cerrar">✕</button>
         <h3>Vista previa del NFT</h3>
         <div style="display:flex;align-items:center;gap:.5rem;margin:0 0 1rem;font-size:.85rem">
-          <label for="mint-chain" style="color:var(--cream)">Red:</label>
-          <select id="mint-chain" onchange="fetchQuote()"
-            style="background:rgba(255,255,255,.06);color:var(--cream);border:1px solid rgba(200,168,75,.3);border-radius:8px;padding:.35rem .6rem;font-family:var(--font-m);font-size:.8rem">
-            <option value="sepolia">Ethereum Sepolia</option>
-            <option value="abstract">Abstract Testnet</option>
-          </select>
+          <span style="color:var(--cream)">Red:</span>
+          <b id="mint-chain-label" style="color:var(--gold2)">—</b>
+          <button class="btn btn-ghost" style="padding:.2rem .6rem;font-size:.72rem" onclick="openChainPicker()">cambiar red</button>
         </div>
         <div class="modal-grid">
           <div class="nft-preview" id="nft-preview"></div>
@@ -564,7 +575,51 @@ function genHarvest() {
 
 let _pendingNft = null;
 
+let _selectedChain = 'sepolia';
+
+async function openChainPicker() {
+  const modal = document.getElementById('chain-modal');
+  const list  = document.getElementById('chain-list');
+  list.innerHTML = 'Cargando redes…';
+  modal.style.display = 'flex';
+  try {
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch('/api/chains', { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+    list.innerHTML = data.chains.map(c => {
+      const dis = c.configured ? '' : 'disabled';
+      const sub = c.configured
+        ? (c.zksync ? 'zkSync · listo para mintear' : 'EVM · listo para mintear')
+        : '⚠ no configurada (faltan RPC / contrato)';
+      return '<button class="btn ' + (c.configured ? 'btn-gold' : 'btn-ghost') + '" ' + dis +
+        ' onclick="pickChain(\'' + c.key + '\',\'' + esc(c.name) + '\')" ' +
+        'style="display:flex;flex-direction:column;align-items:flex-start;gap:.15rem;text-align:left;' +
+        (c.configured ? '' : 'opacity:.55;cursor:not-allowed') + '">' +
+        '<span>' + esc(c.name) + '</span>' +
+        '<small style="font-weight:400;opacity:.8;font-size:.7rem">' + sub + '</small>' +
+      '</button>';
+    }).join('');
+  } catch (e) {
+    list.innerHTML = '<div class="cost-flag bad">No se pudieron cargar las redes: ' + esc(e.message) + '</div>';
+  }
+}
+
+function closeChainPicker() {
+  document.getElementById('chain-modal').style.display = 'none';
+}
+
+function pickChain(key, name) {
+  _selectedChain = key;
+  const lbl = document.getElementById('mint-chain-label');
+  if (lbl) lbl.textContent = name || key;
+  closeChainPicker();
+  genPlant();
+}
+
 function genPlant() {
+  const lbl = document.getElementById('mint-chain-label');
+  if (lbl && lbl.textContent === '—') lbl.textContent = _selectedChain;
   _pendingNft = genHarvest();
   document.getElementById('nft-preview').innerHTML = WoliNFT.buildSvg(_pendingNft);
   renderTraits(_pendingNft);
@@ -594,8 +649,7 @@ async function fetchQuote() {
   box.innerHTML = 'Calculando gas…';
   try {
     const token = await auth.currentUser.getIdToken();
-    const chain = (document.getElementById('mint-chain') || {}).value || 'sepolia';
-    const res = await fetch('/api/mint-quote?chain=' + encodeURIComponent(chain), { headers: { 'Authorization': 'Bearer ' + token } });
+    const res = await fetch('/api/mint-quote?chain=' + encodeURIComponent(_selectedChain), { headers: { 'Authorization': 'Bearer ' + token } });
     const c = await res.json();
     if (!res.ok) throw new Error(c.detail || c.error || ('HTTP ' + res.status));
     box.innerHTML =
@@ -621,7 +675,7 @@ async function mintPending() {
     const res = await fetch('/api/admin-mint', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ harvest: _pendingNft, chain: (document.getElementById('mint-chain') || {}).value || 'sepolia' }),
+      body: JSON.stringify({ harvest: _pendingNft, chain: _selectedChain }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || data.error || ('HTTP ' + res.status));
