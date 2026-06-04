@@ -4,8 +4,7 @@
 ═══════════════════════════════════════════ */
 'use strict';
 
-const { ethers } = require('ethers');
-const { getChain } = require('./chains');
+const { getMintContext } = require('./provider');
 
 const ABI = [
   'function safeMintTest(address to, uint8 rarity) returns (uint256)',
@@ -15,16 +14,8 @@ const ABI = [
 ];
 
 async function mintToken(chainKey, harvestData, toAddressOverride) {
-  const chain = getChain(chainKey);
-  if (!chain) throw new Error('Unknown chain: ' + chainKey);
-
-  if (!chain.rpcUrl || !chain.contract || !process.env.MINTER_PRIVATE_KEY) {
-    throw new Error('Mint not configured for ' + chainKey);
-  }
-
-  const provider = new ethers.JsonRpcProvider(chain.rpcUrl);
-  const wallet   = new ethers.Wallet(process.env.MINTER_PRIVATE_KEY, provider);
-  const contract = new ethers.Contract(chain.contract, ABI, wallet);
+  const { chain, wallet, Contract } = getMintContext(chainKey);
+  const contract = new Contract(chain.contract, ABI, wallet);
 
   let predictedId = null;
   try {
