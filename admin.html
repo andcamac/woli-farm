@@ -281,6 +281,14 @@ tbody tr:hover{background:rgba(77,184,122,.05)}
       <div class="modal">
         <button class="modal-x" onclick="closeMintModal()" aria-label="Cerrar">✕</button>
         <h3>Vista previa del NFT</h3>
+        <div style="display:flex;align-items:center;gap:.5rem;margin:0 0 1rem;font-size:.85rem">
+          <label for="mint-chain" style="color:var(--cream)">Red:</label>
+          <select id="mint-chain" onchange="fetchQuote()"
+            style="background:rgba(255,255,255,.06);color:var(--cream);border:1px solid rgba(200,168,75,.3);border-radius:8px;padding:.35rem .6rem;font-family:var(--font-m);font-size:.8rem">
+            <option value="sepolia">Ethereum Sepolia</option>
+            <option value="abstract">Abstract Testnet</option>
+          </select>
+        </div>
         <div class="modal-grid">
           <div class="nft-preview" id="nft-preview"></div>
           <div>
@@ -586,7 +594,8 @@ async function fetchQuote() {
   box.innerHTML = 'Calculando gas…';
   try {
     const token = await auth.currentUser.getIdToken();
-    const res = await fetch('/api/mint-quote?chain=sepolia', { headers: { 'Authorization': 'Bearer ' + token } });
+    const chain = (document.getElementById('mint-chain') || {}).value || 'sepolia';
+    const res = await fetch('/api/mint-quote?chain=' + encodeURIComponent(chain), { headers: { 'Authorization': 'Bearer ' + token } });
     const c = await res.json();
     if (!res.ok) throw new Error(c.detail || c.error || ('HTTP ' + res.status));
     box.innerHTML =
@@ -612,7 +621,7 @@ async function mintPending() {
     const res = await fetch('/api/admin-mint', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ harvest: _pendingNft }),
+      body: JSON.stringify({ harvest: _pendingNft, chain: (document.getElementById('mint-chain') || {}).value || 'sepolia' }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || data.error || ('HTTP ' + res.status));
@@ -622,7 +631,7 @@ async function mintPending() {
     banner.style.display = 'block';
     banner.innerHTML = `✅ NFT minteado — <b>${esc(h.rarityLabel)}</b> (${h.rarityPct}%) · ` +
       `token #${esc(m.tokenId || '?')} · ` +
-      `<a href="${esc(m.explorerUrl)}" target="_blank" rel="noopener">ver en Etherscan ↗</a>`;
+      `<a href="${esc(m.explorerUrl)}" target="_blank" rel="noopener">ver en explorer ↗</a>`;
     closeMintModal();
     refresh();
   } catch (e) {
