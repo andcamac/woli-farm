@@ -88,11 +88,15 @@ module.exports = async (req, res) => {
     } catch (e) { /* swallow */ }
   }
 
-  const chainKey = 'sepolia';
-
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
   body = body || {};
+
+  // Chain is now selectable (sepolia | abstract). Validate against the registry.
+  const ALLOWED_CHAINS = ['sepolia', 'abstract'];
+  let chainKey = String(body.chain || (req.query && req.query.chain) || 'sepolia').toLowerCase();
+  if (!ALLOWED_CHAINS.includes(chainKey)) chainKey = 'sepolia';
+
   const h = sanitizeHarvest(body.harvest) || randomHarvest();
 
   // Get sequential display ID

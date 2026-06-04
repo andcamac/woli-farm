@@ -10,7 +10,7 @@
 
 const { ethers } = require('ethers');
 const { verifyToken, isAdmin } = require('./_lib/auth');
-const { getChain } = require('./_lib/chains');
+const { getMintContext } = require('./_lib/provider');
 
 const ABI = [
   'function safeMintTest(address to, uint8 rarity) returns (uint256)',
@@ -24,16 +24,18 @@ module.exports = async (req, res) => {
   if (!(await isAdmin(decoded.uid))) { res.status(403).json({ error: 'Forbidden — admin only' }); return; }
 
   const chainKey = (req.query && req.query.chain) || 'sepolia';
-  const chain = getChain(chainKey);
-  if (!chain || !chain.rpcUrl || !chain.contract || !process.env.MINTER_PRIVATE_KEY) {
-    res.status(500).json({ error: 'Mint not configured for ' + chainKey });
+
+  let ctx;
+  try {
+    ctx = getMintContext(chainKey);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
     return;
   }
+  const { chain, provider, wallet, Contract } = ctx;
 
   try {
-    const provider = new ethers.JsonRpcProvider(chain.rpcUrl);
-    const wallet   = new ethers.Wallet(process.env.MINTER_PRIVATE_KEY, provider);
-    const contract = new ethers.Contract(chain.contract, ABI, wallet);
+    const contract = new Contract(chain.contract, ABI, wallet);
 
     const [fee, balance] = await Promise.all([
       provider.getFeeData(),
