@@ -46,12 +46,12 @@ function buildSvg(h) {
 </svg>`;
 }
 
-// Returns a data:application/json;base64 URI suitable for tokenURI / _setTokenURI.
-function buildTokenUri(h) {
+// Returns the metadata object (name/description/image/attributes).
+function buildMetadata(h) {
   const svg   = buildSvg(h);
   const image = 'data:image/svg+xml;base64,' + Buffer.from(svg, 'utf8').toString('base64');
 
-  const meta = {
+  return {
     name:        `Woli Harvest #${String(h.tokenId || 0).padStart(4, '0')}`,
     description: 'A Woli Farm harvest — proof of a completed 7-day real-time hemp grow cycle. Rarity reflects the grower\u2019s performance. Woli CBD · Costa Rica.',
     image,
@@ -64,8 +64,45 @@ function buildTokenUri(h) {
       { trait_type: 'WOLI Earned',  value: Number(h.coinsEarned || 0) },
     ],
   };
-
-  return 'data:application/json;base64,' + Buffer.from(JSON.stringify(meta), 'utf8').toString('base64');
 }
 
-module.exports = { buildTokenUri, buildSvg, rarityName };
+// Self-contained data: URI (used by the EVM on-chain tokenURI path).
+function buildTokenUri(h) {
+  return 'data:application/json;base64,' +
+    Buffer.from(JSON.stringify(buildMetadata(h)), 'utf8').toString('base64');
+}
+
+// Querystring of harvest fields, for the public metadata endpoint
+// (Solana `uri` points here so indexers fetch JSON over HTTPS).
+function buildMetadataQuery(h) {
+  const p = new URLSearchParams();
+  p.set('tokenId',     String(h.tokenId || 0));
+  p.set('rarityLabel', String(h.rarityLabel || ''));
+  p.set('rarityColor', String(h.rarityColor || ''));
+  p.set('rarityPct',   String(Number(h.rarityPct || 0)));
+  p.set('health',      String(Number(h.health || 0)));
+  p.set('perfectDays', String(Number(h.perfectDays || 0)));
+  p.set('maxStreak',   String(Number(h.maxStreak || 0)));
+  p.set('coinsEarned', String(Number(h.coinsEarned || 0)));
+  return p.toString();
+}
+
+// Rebuild a harvest-like object from query params (inverse of buildMetadataQuery).
+function harvestFromQuery(q) {
+  q = q || {};
+  return {
+    tokenId:     Number(q.tokenId) || 0,
+    rarityLabel: q.rarityLabel || 'Básica',
+    rarityColor: q.rarityColor || '#4caf78',
+    rarityPct:   Number(q.rarityPct) || 0,
+    health:      Number(q.health) || 0,
+    perfectDays: Number(q.perfectDays) || 0,
+    maxStreak:   Number(q.maxStreak) || 0,
+    coinsEarned: Number(q.coinsEarned) || 0,
+  };
+}
+
+module.exports = {
+  buildTokenUri, buildMetadata, buildSvg, rarityName,
+  buildMetadataQuery, harvestFromQuery,
+};

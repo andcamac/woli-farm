@@ -2,19 +2,22 @@
    CHAINS — multi-chain registry
    Woli Farm · serverless layer
    ═══════════════════════════════════════════
-   Each chain's RPC URL and deployed contract come
-   from env vars so secrets/addresses are never
-   committed. To add Abstract (Session 4) just add
-   another entry + its env vars — the mint endpoint
-   is already chain-agnostic.
+   Each chain declares a `family` so the mint layer
+   knows which implementation to use:
+     - 'evm'    → ethers + ERC-721 contract
+     - 'zksync' → zksync-ethers + ERC-721 contract
+     - 'solana' → Umi + Metaplex Core (no deployed
+                  contract; the Core program is global)
+   RPCs / contracts / secrets come from env vars.
 ═══════════════════════════════════════════ */
 'use strict';
- 
+
 function getChains() {
   return {
     sepolia: {
       key:           'sepolia',
       name:          'Ethereum Sepolia',
+      family:        'evm',
       chainId:       11155111,
       tokenStandard: 'ERC-721',
       currency:      'SepoliaETH',
@@ -23,25 +26,44 @@ function getChains() {
       explorerTx:    'https://sepolia.etherscan.io/tx/',
       explorerToken: 'https://sepolia.etherscan.io/token/',
     },
- 
-    // ── Session 4: Abstract (ZK Stack / zkSync Era — needs zksync-ethers) ──
+
+    // ── Abstract (ZK Stack / zkSync Era — needs zksync-ethers) ──
     abstract: {
       key:           'abstract',
       name:          'Abstract Testnet',
+      family:        'zksync',
+      zksync:        true,
       chainId:       11124,
       tokenStandard: 'ERC-721',
       currency:      'ETH',
-      zksync:        true,
       rpcUrl:        process.env.ABSTRACT_RPC_URL || 'https://api.testnet.abs.xyz',
       contract:      process.env.WOLI_NFT_CONTRACT_ABSTRACT || '',
       explorerTx:    'https://sepolia.abscan.org/tx/',
       explorerToken: 'https://sepolia.abscan.org/token/',
     },
+
+    // ── Solana (Metaplex Core · devnet) ──
+    // Note: Metaplex Core lives on devnet/mainnet, NOT the
+    // "testnet" validator cluster — devnet IS the test network.
+    solana: {
+      key:           'solana',
+      name:          'Solana Devnet',
+      family:        'solana',
+      cluster:       'devnet',
+      tokenStandard: 'Metaplex Core',
+      currency:      'SOL',
+      rpcUrl:        process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com',
+      // No deployed contract: the Core program is global.
+      contract:      '',
+      explorerTx:    'https://solscan.io/tx/',
+      explorerToken: 'https://solscan.io/token/',
+      explorerSuffix:'?cluster=devnet',
+    },
   };
 }
- 
+
 function getChain(key) {
   return getChains()[key] || null;
 }
- 
+
 module.exports = { getChains, getChain };

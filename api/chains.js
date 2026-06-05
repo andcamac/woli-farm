@@ -17,13 +17,21 @@ module.exports = async (req, res) => {
   if (!decoded) { res.status(401).json({ error: 'Unauthorized' }); return; }
   if (!(await isAdmin(decoded.uid))) { res.status(403).json({ error: 'Forbidden — admin only' }); return; }
 
-  const hasKey = !!process.env.MINTER_PRIVATE_KEY;
+  const hasEvmKey    = !!process.env.MINTER_PRIVATE_KEY;
+  const hasSolSecret = !!process.env.SOLANA_MINTER_SECRET;
+
+  function isConfigured(c) {
+    if (c.family === 'solana') return !!(c.rpcUrl && hasSolSecret);
+    return !!(c.rpcUrl && c.contract && hasEvmKey); // evm / zksync
+  }
+
   const chains = Object.values(getChains()).map(c => ({
     key:        c.key,
     name:       c.name,
+    family:     c.family,
     currency:   c.currency || 'ETH',
     zksync:     !!c.zksync,
-    configured: !!(c.rpcUrl && c.contract && hasKey),
+    configured: isConfigured(c),
   }));
 
   res.status(200).json({ chains });

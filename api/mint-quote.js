@@ -25,6 +25,29 @@ module.exports = async (req, res) => {
 
   const chainKey = (req.query && req.query.chain) || 'sepolia';
 
+  const { getChain } = require('./_lib/chains');
+  const _chain = getChain(chainKey);
+
+  // ── Solana: no EVM gas model; return fixed cost + treasury balance ──
+  if (_chain && _chain.family === 'solana') {
+    try {
+      const { quoteSolana } = require('./_lib/minter-solana');
+      const q = await quoteSolana(chainKey);
+      res.status(200).json({
+        chain:            _chain.name,
+        currency:         'SOL',
+        estCostEth:       q.estCostSol.toString(),     // reuse UI field
+        minterAddress:    q.minterAddress,
+        minterBalanceEth: q.minterBalanceSol.toString(),
+        enough:           q.enough,
+        testnet:          true,
+      });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+    return;
+  }
+
   let ctx;
   try {
     ctx = getMintContext(chainKey);

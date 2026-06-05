@@ -589,9 +589,13 @@ async function openChainPicker() {
     if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
     list.innerHTML = data.chains.map(c => {
       const dis = c.configured ? '' : 'disabled';
-      const sub = c.configured
-        ? (c.zksync ? 'zkSync · listo para mintear' : 'EVM · listo para mintear')
-        : '⚠ no configurada (faltan RPC / contrato)';
+      const fam = c.family === 'solana' ? 'Solana · Metaplex Core'
+                : c.family === 'zksync' ? 'zkSync · listo para mintear'
+                : 'EVM · listo para mintear';
+      const missing = c.family === 'solana'
+                ? '⚠ no configurada (faltan RPC / secret key)'
+                : '⚠ no configurada (faltan RPC / contrato)';
+      const sub = c.configured ? fam : missing;
       return '<button class="btn ' + (c.configured ? 'btn-gold' : 'btn-ghost') + '" ' + dis +
         ' onclick="pickChain(\'' + c.key + '\',\'' + esc(c.name) + '\')" ' +
         'style="display:flex;flex-direction:column;align-items:flex-start;gap:.15rem;text-align:left;' +

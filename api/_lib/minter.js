@@ -1,9 +1,13 @@
 /* ═══════════════════════════════════════════
-   MINTER — Updated for optimized contract
+   MINTER — chain-family dispatcher
    Woli Farm · serverless layer
+   ═══════════════════════════════════════════
+   EVM / zkSync → ethers|zksync-ethers + ERC-721
+   Solana       → Umi + Metaplex Core (minter-solana)
 ═══════════════════════════════════════════ */
 'use strict';
 
+const { getChain } = require('./chains');
 const { getMintContext } = require('./provider');
 
 const ABI = [
@@ -13,7 +17,7 @@ const ABI = [
   'event HarvestMinted(uint256 indexed tokenId, address to, uint8 rarity, uint16 score)'
 ];
 
-async function mintToken(chainKey, harvestData, toAddressOverride) {
+async function mintEvm(chainKey, harvestData, toAddressOverride) {
   const { chain, wallet, Contract } = getMintContext(chainKey);
   const contract = new Contract(chain.contract, ABI, wallet);
 
@@ -24,8 +28,6 @@ async function mintToken(chainKey, harvestData, toAddressOverride) {
   } catch (e) { /* non-fatal */ }
 
   const to = toAddressOverride || wallet.address;
-  
-  // Use the cheap safeMintTest
   const tx = await contract.safeMintTest(to, harvestData.rarity || 2);
 
   return {
@@ -37,6 +39,19 @@ async function mintToken(chainKey, harvestData, toAddressOverride) {
     tokenStandard: chain.tokenStandard,
     explorerUrl:   chain.explorerTx + tx.hash,
   };
+}
+
+// Unified entry point used by the mint endpoints.
+async function mintToken(chainKey, harvestData, toAddressOverride) {
+  const chain = getChain(chainKey);
+  if (!chain) throw new Error('Unknown chain: ' + chainKey);
+
+  if (chain.family === 'solana') {
+    const { mintAsset } = require('./minter-solana');
+    return mintAsset(chainKey, harvestData);
+  }
+  // 'evm' and 'zksync' share the same ERC-721 path (provider handles the diff)
+  return mintEvm(chainKey, harvestData, toAddressOverride);
 }
 
 module.exports = { mintToken };

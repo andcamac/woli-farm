@@ -92,8 +92,8 @@ module.exports = async (req, res) => {
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
   body = body || {};
 
-  // Chain is now selectable (sepolia | abstract). Validate against the registry.
-  const ALLOWED_CHAINS = ['sepolia', 'abstract'];
+  // Chain is selectable (sepolia | abstract | solana). Validate against the registry.
+  const ALLOWED_CHAINS = ['sepolia', 'abstract', 'solana'];
   let chainKey = String(body.chain || (req.query && req.query.chain) || 'sepolia').toLowerCase();
   if (!ALLOWED_CHAINS.includes(chainKey)) chainKey = 'sepolia';
 
@@ -115,9 +115,17 @@ module.exports = async (req, res) => {
   });
 
   try {
-    // === NEW CHEAP MINT ===
+    // EVM path uses `rarity`; Solana path uses the full attributes for metadata.
     const result = await mintToken(chainKey, {
-      rarity: h.rarityLevel   // 0 to 4
+      rarity:      h.rarityLevel,   // 0..4 (EVM)
+      tokenId:     displayId,
+      rarityLabel: h.rarityLabel,
+      rarityColor: h.rarityColor,
+      rarityPct:   h.rarityPct,
+      health:      h.health,
+      perfectDays: h.perfectDays,
+      maxStreak:   h.maxStreak,
+      coinsEarned: h.coinsEarned,
     });
 
     // Save to Firestore
@@ -147,6 +155,8 @@ module.exports = async (req, res) => {
       mintedTo:        result.to,
       mintTxHash:      result.txHash,
       explorerUrl:     result.explorerUrl,
+      assetUrl:        result.assetUrl || null,
+      metadataUri:     result.metadataUri || null,
       mintedAt:        admin.firestore.FieldValue.serverTimestamp(),
       dayHistory:      [],
     });
